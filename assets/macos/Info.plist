@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Info.plist template for the my-capture macOS application bundle.
+
+  The Makefile (target dist-macos) copies this file into the bundle and
+  replaces @VERSION@ with the build version. The program also embeds it, to
+  make a temporary bundle for itself when it is started outside one (see
+  internal/ui/platform_darwin.go).
+
+  The two usage description keys are required, not decoration: without them
+  macOS refuses camera and microphone access to a bundled application without
+  even showing the permission prompt, and the video and audio stay empty.
+  CFBundleIdentifier matches the application ID used by the program for its
+  saved settings (appID in internal/ui/app.go).
+-->
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>My Capture</string>
+	<key>CFBundleDisplayName</key>
+	<string>My Capture</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.github.steveohara.my-capture</string>
+	<key>CFBundleIconFile</key>
+	<string>icon</string>
+	<key>CFBundleExecutable</key>
+	<string>my-capture</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@VERSION@</string>
+	<key>CFBundleVersion</key>
+	<string>@VERSION@</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>12.0</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>My Capture shows the picture from your video capture device.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>My Capture plays the sound from your video capture device.</string>
+</dict>
+</plist>

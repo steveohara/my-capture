@@ -1,0 +1,25 @@
+# Configures the release notes that GitHub generates ("Generate release
+# notes") for the release workflow in .github/workflows/release.yml.
+#
+# Merged pull requests are listed under the heading that matches one of their
+# labels. A pull request with the label "skip-release-notes" is left out. The
+# last category catches everything that has none of the other labels.
+changelog:
+  exclude:
+    labels:
+      - skip-release-notes
+  categories:
+    - title: New features
+      labels:
+        - enhancement
+        - feature
+    - title: Bug fixes
+      labels:
+        - bug
+        - fix
+    - title: Documentation
+      labels:
+        - documentation
+    - title: Other changes
+      labels:
+        - "*"

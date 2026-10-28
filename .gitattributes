@@ -1,0 +1,5 @@
+# Keep shell scripts and the Makefile on Unix line endings everywhere, so they
+# still run when the repository is checked out on Windows.
+* text=auto
+*.sh text eol=lf
+Makefile text eol=lf

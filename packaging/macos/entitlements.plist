@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Entitlements used when the macOS bundle is signed with a real Developer ID
+  (make dist-macos SIGN_IDENTITY="Developer ID Application: ...").
+
+  A signed application with the hardened runtime, which notarization
+  requires, may only use the camera and microphone if it declares these
+  entitlements. They are not used for the default ad-hoc signature.
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.device.camera</key>
+	<true/>
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+</dict>
+</plist>

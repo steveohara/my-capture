@@ -1,0 +1,214 @@
+# Release workflow for my-capture.
+#
+# Starting it (Actions tab, "Release", "Run workflow") does all of this:
+#
+#   1. Works out the next version from the existing tags. By default the minor
+#      number goes up: v0.3.1 becomes v0.4.0. The first release is v0.1.0.
+#   2. Runs "make check" (format, vet, tests) and builds the artefacts:
+#      a universal macOS app on a macOS runner, and a Windows exe on a Windows
+#      runner. Each artefact is named after the version.
+#   3. Creates the git tag and the GitHub release at the commit it was run on,
+#      with release notes, the zip files, a SHA256SUMS.txt checksum file and
+#      build provenance attestations that tie each file to this workflow run.
+#
+# Nothing here runs by itself on a push or a pull request. A release only
+# happens when someone starts the workflow, and the workflow file must be on
+# the repository's default branch for the "Run workflow" button to appear.
+#
+# Repository settings: none are needed beyond the permissions declared below.
+# Artifact attestations need a public repository (or a paid plan); if they are
+# unavailable the attestation step fails without stopping the release, and the
+# release notes then point at a check that will not work for that release.
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Which part of the version to increase"
+        type: choice
+        options:
+          - minor
+          - patch
+          - major
+        default: minor
+      draft:
+        description: "Create the release as a draft to review and publish by hand"
+        type: boolean
+        default: false
+
+# Least privilege by default. The jobs that need more ask for it themselves.
+permissions:
+  contents: read
+
+# Two runs at once could choose the same version, so they queue instead.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------------------
+  # version: choose the tag for this release
+  # ---------------------------------------------------------------------
+  version:
+    name: Choose version
+    runs-on: ubuntu-latest
+    outputs:
+      # tag is the new version with its leading v, for example v0.4.0.
+      tag: ${{ steps.next.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # the whole history, because the tags are needed
+
+      - name: Work out the next version
+        id: next
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          tag="$(bash .github/scripts/next-version.sh "$BUMP")"
+          echo "Next version: $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  # ---------------------------------------------------------------------
+  # build-macos: universal My Capture.app
+  # ---------------------------------------------------------------------
+  build-macos:
+    name: Build macOS
+    needs: version
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - name: Check
+        run: make check
+
+      - name: Build the macOS app
+        run: make dist-macos VERSION=${{ needs.version.outputs.tag }}
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: macos
+          path: dist/*.zip
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------
+  # build-windows: my-capture.exe
+  # ---------------------------------------------------------------------
+  build-windows:
+    name: Build Windows
+    needs: version
+    runs-on: windows-latest
+    steps:
+      # Keep Unix line endings. Otherwise git converts the files to Windows
+      # line endings on checkout and "make fmt-check" reports every file.
+      - name: Keep line endings
+        shell: bash
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      # MSYS2 provides make, zip and the MinGW-w64 C compiler that Fyne and
+      # miniaudio need. path-type inherit keeps the Go from setup-go on PATH.
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          path-type: inherit
+          update: false
+          install: >-
+            make
+            zip
+            mingw-w64-x86_64-gcc
+
+      - name: Check
+        shell: msys2 {0}
+        run: make check
+
+      - name: Build the Windows executable
+        shell: msys2 {0}
+        run: make dist-windows VERSION=${{ needs.version.outputs.tag }}
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows
+          path: dist/*.zip
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------
+  # release: tag, attest and publish
+  # ---------------------------------------------------------------------
+  release:
+    name: Publish release
+    needs: [version, build-macos, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the tag and the release
+      id-token: write # sign the attestations
+      attestations: write # store the attestations
+    env:
+      TAG: ${{ needs.version.outputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Download the artefacts
+        uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true # both zips into dist/ rather than one folder each
+
+      - name: Write the checksums
+        working-directory: dist
+        run: |
+          sha256sum *.zip > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      # Records, in GitHub's attestation store, which workflow run built each
+      # file. Users can check a download with "gh attestation verify".
+      - name: Attest build provenance
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/*.zip
+
+      # The text at the top of the release. GitHub adds its own "What's Changed"
+      # list below it, grouped as set up in .github/release.yml.
+      - name: Write the release notes header
+        run: |
+          cat > notes.md <<'EOF'
+          ## Downloads
+
+          | Platform | File |
+          |---|---|
+          | macOS (Apple silicon and Intel) | `my-capture-@TAG@-macos-universal.zip` |
+          | Windows (64-bit) | `my-capture-@TAG@-windows-amd64.zip` |
+
+          Unzip and run. My Capture needs [ffmpeg](https://ffmpeg.org) 5.1 or later
+          to capture video: `brew install ffmpeg` on macOS, `winget install Gyan.FFmpeg`
+          on Windows, or put `ffmpeg` next to the program.
+
+          The macOS app is not notarized. On first start, right click it and choose Open.
+
+          Check a download with `sha256sum -c SHA256SUMS.txt`, or with
+          `gh attestation verify <file> --repo @REPO@`.
+
+          EOF
+          sed -i "s|@TAG@|$TAG|g; s|@REPO@|$GH_REPO|g" notes.md
+
+      - name: Create the release
+        env:
+          DRAFT: ${{ inputs.draft }}
+        run: |
+          args=(--target "$GITHUB_SHA" --title "my-capture $TAG" --generate-notes --notes-file notes.md)
+          if [ "$DRAFT" = "true" ]; then
+            args+=(--draft)
+          fi
+          gh release create "$TAG" "${args[@]}" dist/*.zip dist/SHA256SUMS.txt

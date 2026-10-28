@@ -111,7 +111,7 @@ All configuration is read in `internal/config`. The same text is printed by
 
 | Variable | Meaning | Default |
 |---|---|---|
-| `MYCAPTURE_FFMPEG` | Absolute path of the ffmpeg executable. When unset it is searched for next to the executable, on the `PATH`, and in `/opt/homebrew/bin` and `/usr/local/bin`. | unset |
+| `MYCAPTURE_FFMPEG` | Absolute path of the ffmpeg executable. When unset, the one next to the executable is used (the downloads include one), then one on the `PATH`, then `/opt/homebrew/bin` and `/usr/local/bin`. | unset |
 | `MYCAPTURE_AUDIO_DELAY_MS` | Initial audio delay in milliseconds, 20 to 1000. | `60` |
 | `MYCAPTURE_DEBUG` | `1`, `true`, `yes` or `on` prints everything ffmpeg reports on its error stream. | unset |
 | `MYCAPTURE_NO_RELAUNCH` | macOS only. `1`, `true`, `yes` or `on` stops the program restarting itself inside a temporary app bundle (see Name and icon). | unset |
@@ -176,11 +176,27 @@ the release in one step with `--generate-notes`. A `concurrency` group stops
 two runs from choosing the same version. The version reaches the program
 through `-ldflags "-X main.version=..."`.
 
+### Bundled ffmpeg
+
+The downloads contain their own ffmpeg (`Contents/MacOS/ffmpeg` in the app
+bundle, `ffmpeg.exe` beside `my-capture.exe`), found by `FindFFmpeg` because it
+looks next to the executable first. It is built by `packaging/ffmpeg/build.sh`
+from the unmodified FFmpeg release named there, with everything disabled except
+what the program uses (see the script for the list and the reasons). That makes
+it small (about 8 MB), free of external libraries, and LGPL rather than GPL,
+whose redistribution terms are met by shipping the licence and the source link
+in `ffmpeg-licenses`. On macOS the script builds arm64 and x86_64 separately
+(the one for the other processor is cross-compiled) and joins them with `lipo`;
+on Windows it builds with MSYS2 gcc, links statically, and fails if the result
+needs a MinGW DLL. The `Makefile` builds it on demand into `build/ffmpeg` and
+reuses it; the release workflow caches that folder keyed on the script's hash.
+
 ## Design decisions
 
 - **ffmpeg as a child process, not cgo bindings.** It gives the same device
   coverage as OBS (AVFoundation and DirectShow) without maintaining bindings or
-  depending on OpenCV. The cost is that ffmpeg must be installed or shipped.
+  depending on OpenCV. The cost is that ffmpeg has to be shipped, which the
+  downloads do.
 - **Raw RGBA over a pipe.** Simple and fast to convert (swscale), but a 1080p60
   stream is about 500 MB/s. The mode list therefore prefers the widest mode up to 1920
   pixels, so 1920x1080 comes before odd shapes such as a 1552x1552 square crop.

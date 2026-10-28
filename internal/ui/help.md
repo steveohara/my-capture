@@ -45,7 +45,7 @@ Your choices of device and aspect are remembered between sessions.
 
 ## Troubleshooting
 
-- **"ffmpeg was not found"**: the picture is captured with ffmpeg 5.1 or later. Install it (macOS: brew install ffmpeg. Windows: winget install Gyan.FFmpeg), then press Refresh. You can also set MYCAPTURE_FFMPEG to its full path.
+- **"ffmpeg was not found"**: My Capture includes the ffmpeg it uses, next to the program, so this means that file has been removed. Download My Capture again, or install ffmpeg 5.1 or later (macOS: brew install ffmpeg. Windows: winget install Gyan.FFmpeg) and press Refresh. You can also set MYCAPTURE_FFMPEG to its full path.
 - **The picture does not start**: try another mode, or **Device default**. Start the program with MYCAPTURE_DEBUG=1 from a terminal to see what ffmpeg reports.
 - **No devices on macOS**: allow camera and microphone access in System Settings, Privacy and Security.
 - **The sound is ahead of or behind the picture**: move the **Audio delay** slider.

@@ -1,4 +1,5 @@
 bin/
 dist/
+build/
 .DS_Store
 *.exe

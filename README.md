@@ -11,6 +11,8 @@ video capture device. It targets macOS and Windows.
 - Nothing is recorded, and there is no volume control. Use the external device
   and the computer's own volume control.
 
+![My Capture showing a test card, with the device pickers and controls above the picture](docs/images/screenshot.png)
+
 ## Requirements
 
 | What | Why |
@@ -18,7 +20,8 @@ video capture device. It targets macOS and Windows.
 | Go 1.26 or later | Building |
 | A C compiler | Fyne and miniaudio use cgo. macOS: `xcode-select --install`. Windows: a MinGW-w64 gcc, for example from MSYS2 |
 | make | Runs the build targets below. macOS has it; on Windows use the one from MSYS2 |
-| ffmpeg 5.1 or later | Captures the video. macOS: `brew install ffmpeg`. Windows: `winget install Gyan.FFmpeg`. It can instead be bundled with the release artefacts, see below |
+| ffmpeg 5.1 or later | Captures the video. **The downloads already include it**, so users install nothing. You only need your own copy to run from source (`go run`, an IDE): macOS `brew install ffmpeg`, Windows `winget install Gyan.FFmpeg` |
+| nasm | Only to build the release artefacts, for the ffmpeg that is bundled. macOS: `brew install nasm`. Windows (MSYS2): `pacman -S mingw-w64-x86_64-nasm` |
 | MinGW-w64 (only to build the Windows artefact on a Mac) | The Windows C compiler. macOS: `brew install mingw-w64` |
 
 On macOS, allow camera and microphone access when asked. If the program is
@@ -55,7 +58,10 @@ Windows add `-ldflags "-H=windowsgui"` so no console window appears.
 | `make dist-macos` | Builds `dist/my-capture-VERSION-macos-universal.zip`, holding a universal (Apple silicon and Intel) `My Capture.app`. Must run on a Mac |
 | `make dist-windows` | Builds `dist/my-capture-VERSION-windows-amd64.zip`, holding `my-capture.exe` and this README. Needs MinGW-w64 |
 | `make dist` | Both of the above. Needs a Mac with MinGW-w64 installed |
+| `make ffmpeg-macos` | Builds only the universal macOS ffmpeg that goes in the app bundle. It is built from source, takes a few minutes the first time, and is reused afterwards |
+| `make ffmpeg-windows` | The same for the Windows `ffmpeg.exe`. Needs MinGW-w64 |
 | `make clean` | Deletes `bin/` and `dist/` |
+| `make clean-ffmpeg` | Deletes the built ffmpeg (`build/`), so it is built again next time. Needed after editing `packaging/ffmpeg/build.sh` |
 
 ### Make variables
 
@@ -65,8 +71,9 @@ as environment variables.
 | Variable | Meaning | Default |
 |---|---|---|
 | `VERSION` | Names the artefacts, is the version inside the macOS bundle, and is what `my-capture -version` prints | The nearest git tag or commit, else `dev` |
-| `FFMPEG_BIN` | Path of an ffmpeg executable to copy into the macOS bundle, so users need not install ffmpeg. Check ffmpeg's licence before redistributing it | empty (not bundled) |
-| `FFMPEG_EXE` | Path of `ffmpeg.exe` to copy into the Windows zip. The same licence advice applies | empty (not bundled) |
+| `BUNDLE_FFMPEG` | `1` puts a small LGPL ffmpeg, built from source, in the macOS bundle and the Windows zip. Any other value leaves it out, for a faster local build | `1` |
+| `FFMPEG_BIN` | Path of an ffmpeg executable to copy into the macOS bundle instead of the one built here. Check that its licence allows redistribution | empty (use the built one) |
+| `FFMPEG_EXE` | Path of `ffmpeg.exe` to copy into the Windows zip instead of the built one. The same licence advice applies | empty (use the built one) |
 | `MACOS_ARCHS` | Architectures in the macOS binary. `arm64` alone builds faster but only runs on Apple silicon | `arm64 amd64` |
 | `MACOS_MIN` | Oldest macOS version supported | `12.0` |
 | `SIGN_IDENTITY` | Code signing identity for the macOS bundle. `-` is an ad-hoc signature. A Developer ID such as `Developer ID Application: Name (TEAMID)` signs with the hardened runtime and the entitlements in `packaging/macos`. Notarization is not done | `-` |
@@ -95,11 +102,32 @@ builds natively when run under MSYS2 on Windows.
   protected your PC" the first time: the user clicks **More info**, then **Run
   anyway**. There is no installer; the user unzips the folder and runs the
   program. The Windows build has not been run on real Windows hardware.
-- **ffmpeg**: the program looks for ffmpeg next to itself first. Passing
-  `FFMPEG_BIN` or `FFMPEG_EXE` to `make` puts a copy there (inside
-  `Contents/MacOS` in the macOS bundle), so the artefact works without
-  installing ffmpeg. The automatic release workflow does not do this, so
-  downloads from GitHub need ffmpeg installed separately.
+- **ffmpeg**: both downloads contain their own ffmpeg, so there is nothing to
+  install. See "Bundled ffmpeg" below.
+
+### Bundled ffmpeg
+
+`packaging/ffmpeg/build.sh` downloads the FFmpeg source release named in the
+script, checks its SHA-256 checksum, and builds a small ffmpeg with only the
+parts My Capture uses: the capture device (AVFoundation or DirectShow), the
+raw, MJPEG and H.264 decoders, colour conversion, and the raw output. It is
+about 8 MB, uses no external libraries, and on Windows needs no DLLs.
+
+- **Licence.** The build uses no GPL or non-free code, so it is under the
+  LGPL 2.1 or later, which is easy to meet when redistributing. Each download
+  contains `ffmpeg-licenses` with the licence text and `FFMPEG-NOTICE.txt`,
+  which gives the exact source link and says how the copy was built. The script
+  is the build recipe and is in this repository.
+- **Why not a ready-made build.** Most macOS builds are GPL licensed and
+  contain far more than is needed (50 to 100 MB), and Homebrew's copy depends
+  on many libraries elsewhere on the disk.
+- **Upgrading.** Change `FFMPEG_VERSION` and `FFMPEG_SHA256` in the script,
+  then `make clean-ffmpeg dist-macos` and try it with a real device.
+- **Speed.** The release workflow keeps the built ffmpeg in the GitHub Actions
+  cache and rebuilds it only when the script changes.
+- **Replacing it.** My Capture uses the ffmpeg next to it first, then
+  `MYCAPTURE_FFMPEG`, the `PATH`, and the usual install folders, so a user can
+  put another build next to the program to override the bundled one.
 
 Building never commits, tags or publishes anything. Set `VERSION` or tag the
 repository yourself to name a release.
@@ -254,14 +282,14 @@ program started, it is chosen again automatically.
 
 | Variable | Meaning | Default |
 |---|---|---|
-| `MYCAPTURE_FFMPEG` | Absolute path of the ffmpeg executable used to capture video. When unset, my-capture looks next to its own executable, on the `PATH`, and in `/opt/homebrew/bin` and `/usr/local/bin`. | unset |
+| `MYCAPTURE_FFMPEG` | Absolute path of the ffmpeg executable used to capture video. When unset, my-capture uses the one next to its own executable (the downloads include one), then one on the `PATH`, then `/opt/homebrew/bin` and `/usr/local/bin`. | unset |
 | `MYCAPTURE_AUDIO_DELAY_MS` | Initial audio delay in milliseconds, 20 to 1000. The audio is buffered for this long before it is played. Raise it if the sound arrives before the picture, or if the audio crackles. It can also be changed with the "Audio delay" slider, but slider changes are not remembered; set this variable to keep a value. | `60` |
 | `MYCAPTURE_DEBUG` | Set to `1`, `true`, `yes` or `on` to print everything ffmpeg reports on its error stream. Use it to find out why a capture device will not open. | unset |
 | `MYCAPTURE_NO_RELAUNCH` | macOS only. A program started from a terminal or an IDE has no application bundle, so macOS would label it with its file name in the Dock. To avoid that, my-capture restarts itself once inside a temporary `My Capture.app` in the user cache folder. Set to `1`, `true`, `yes` or `on` to turn that off. It is never done when the program is already in an app bundle, or under a debugger. | unset (restart inside a bundle) |
 
 ## Troubleshooting
 
-- **"ffmpeg was not found"**: install ffmpeg or set `MYCAPTURE_FFMPEG`.
+- **"ffmpeg was not found"**: the downloads include ffmpeg, so this only happens if the bundled copy was deleted or when running from source. Install ffmpeg (`brew install ffmpeg`, `winget install Gyan.FFmpeg`) or set `MYCAPTURE_FFMPEG`.
 - **The video does not start**: run with `MYCAPTURE_DEBUG=1` and read the
   ffmpeg messages. Try another mode, or `Device default`.
 - **No devices listed**: on macOS check System Settings, Privacy & Security,

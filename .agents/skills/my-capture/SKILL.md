@@ -22,17 +22,21 @@ make check         # fmt-check, vet and test
 make dist-macos    # dist/my-capture-VERSION-macos-universal.zip (Mac only)
 make dist-windows  # dist/my-capture-VERSION-windows-amd64.zip (needs MinGW-w64)
 make dist          # both
+make ffmpeg-macos  # build only the bundled ffmpeg (also ffmpeg-windows, clean-ffmpeg)
 make icons         # redraw the icon and rebuild icns and the Windows resource (Mac only)
 make clean
 ```
 
 Variables: `VERSION` (artefact name and bundle version, default git describe),
-`FFMPEG_BIN` and `FFMPEG_EXE` (ffmpeg to bundle, default none), `MACOS_ARCHS`
+`BUNDLE_FFMPEG` (default 1: bundle a small LGPL ffmpeg built by
+`packaging/ffmpeg/build.sh`), `FFMPEG_BIN` and `FFMPEG_EXE` (use this ffmpeg instead), `MACOS_ARCHS`
 (default `arm64 amd64`), `MACOS_MIN` (default `12.0`), `SIGN_IDENTITY` (default
 `-`, ad-hoc), `MINGW_CC` (default `x86_64-w64-mingw32-gcc`), `GO`.
 
-Needs Go 1.26+, a C compiler (cgo), make, and ffmpeg 5.1 or later at run time
-(`brew install ffmpeg` on macOS, `winget install Gyan.FFmpeg` on Windows).
+Needs Go 1.26+, a C compiler (cgo), make, and nasm for the bundled ffmpeg
+(`brew install nasm`). The downloads include their own ffmpeg, so users install
+nothing; only running from source needs ffmpeg 5.1+ on the PATH (`brew install
+ffmpeg`, `winget install Gyan.FFmpeg`).
 `make dist-windows` on a Mac also needs `brew install mingw-w64`. Without make:
 `go build -o bin/my-capture .`, adding `-ldflags "-H=windowsgui"` on Windows.
 
@@ -81,7 +85,7 @@ stretch to window, fill with cropping, or a forced 16:9, 16:10, 4:3, 21:9 or
 
 | Variable | Meaning | Default |
 |---|---|---|
-| `MYCAPTURE_FFMPEG` | Absolute path of the ffmpeg executable used to capture video. When unset, my-capture looks next to its own executable, on the `PATH`, and in `/opt/homebrew/bin` and `/usr/local/bin`. | unset |
+| `MYCAPTURE_FFMPEG` | Absolute path of the ffmpeg executable used to capture video. When unset, my-capture uses the one next to its own executable (the downloads include one), then one on the `PATH`, then `/opt/homebrew/bin` and `/usr/local/bin`. | unset |
 | `MYCAPTURE_AUDIO_DELAY_MS` | Initial audio delay in milliseconds, 20 to 1000. The audio is buffered for this long before it is played. Raise it if the sound arrives before the picture, or if the audio crackles. It can also be changed with the "Audio delay" slider, but slider changes are not remembered; set this variable to keep a value. | `60` |
 | `MYCAPTURE_DEBUG` | Set to `1`, `true`, `yes` or `on` to print everything ffmpeg reports on its error stream. Use it to find out why a capture device will not open. | unset |
 | `MYCAPTURE_NO_RELAUNCH` | macOS only. A program started from a terminal or an IDE has no application bundle, so macOS would label it with its file name in the Dock. To avoid that, my-capture restarts itself once inside a temporary `My Capture.app` in the user cache folder. Set to `1`, `true`, `yes` or `on` to turn that off. It is never done when the program is already in an app bundle, or under a debugger. | unset (restart inside a bundle) |
@@ -110,6 +114,8 @@ stretch to window, fill with cropping, or a forced 16:9, 16:10, 4:3, 21:9 or
   `internal/ui/platform_darwin.go` restarts an unbundled macOS run inside a
   temporary app bundle (skipped under a debugger or with `MYCAPTURE_NO_RELAUNCH`)
   so the menu bar, Dock tooltip and icon are right.
+- `packaging/ffmpeg/build.sh`: builds the small LGPL ffmpeg that goes in the
+  downloads (version and checksum at the top; change the components there).
 - `Makefile`, `assets/macos`, `packaging/macos`: build, test and release targets,
   the macOS Info.plist template and the signing entitlements.
 

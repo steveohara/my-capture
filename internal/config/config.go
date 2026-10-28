@@ -9,8 +9,9 @@
 //
 // ENVIRONMENT VARIABLES
 //   - MYCAPTURE_FFMPEG: absolute path of the ffmpeg executable. When unset,
-//     ffmpeg is searched for next to the my-capture executable, on the PATH
-//     and in the usual package manager locations.
+//     the ffmpeg next to the my-capture executable is used (the downloads
+//     include one), then one on the PATH, then the usual package manager
+//     locations.
 //   - MYCAPTURE_AUDIO_DELAY_MS: initial audio delay in milliseconds
 //     (default 60, range 20 to 1000). The audio is buffered for this long
 //     before it is played, which lets the user line the sound up with the
@@ -161,8 +162,9 @@ func Usage() string {
 	return fmt.Sprintf(`Environment variables:
   %s
         Absolute path of the ffmpeg executable used to capture video.
-        Default: unset. my-capture then looks next to its own executable,
-        on the PATH, and in /opt/homebrew/bin and /usr/local/bin.
+        Default: unset. my-capture then uses the ffmpeg next to its own
+        executable (the downloads include one), then one on the PATH, then
+        /opt/homebrew/bin and /usr/local/bin.
 
   %s
         Initial audio delay in milliseconds, %d to %d. The audio is

@@ -7,7 +7,9 @@
 #      number goes up: v0.3.1 becomes v0.4.0. The first release is v0.1.0.
 #   2. Runs "make check" (format, vet, tests) and builds the artefacts:
 #      a universal macOS app on a macOS runner, and a Windows exe on a Windows
-#      runner. Each artefact is named after the version.
+#      runner. Each artefact is named after the version and contains its own
+#      small ffmpeg, built from source by packaging/ffmpeg/build.sh (and kept
+#      in the Actions cache between runs), so users need to install nothing.
 #   3. Creates the git tag and the GitHub release at the commit it was run on,
 #      with release notes, the zip files, a SHA256SUMS.txt checksum file and
 #      build provenance attestations that tie each file to this workflow run.
@@ -96,6 +98,19 @@ jobs:
       - name: Check
         run: make check
 
+      # nasm lets ffmpeg's colour conversion use x86 assembly for the Intel
+      # half of the universal binary.
+      - name: Install nasm
+        run: brew install nasm
+
+      # Building ffmpeg from source takes a few minutes, so the result is kept
+      # between runs and only rebuilt when packaging/ffmpeg/build.sh changes.
+      - name: Restore the ffmpeg build
+        uses: actions/cache@v6
+        with:
+          path: build/ffmpeg
+          key: ffmpeg-macos-${{ hashFiles('packaging/ffmpeg/build.sh') }}
+
       - name: Build the macOS app
         run: make dist-macos VERSION=${{ needs.version.outputs.tag }}
 
@@ -131,11 +146,21 @@ jobs:
           install: >-
             make
             zip
+            xz
+            diffutils
             mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-nasm
 
       - name: Check
         shell: msys2 {0}
         run: make check
+
+      # As on macOS, the ffmpeg built from source is kept between runs.
+      - name: Restore the ffmpeg build
+        uses: actions/cache@v6
+        with:
+          path: build/ffmpeg
+          key: ffmpeg-windows-${{ hashFiles('packaging/ffmpeg/build.sh') }}
 
       - name: Build the Windows executable
         shell: msys2 {0}
@@ -195,9 +220,10 @@ jobs:
           | macOS (Apple silicon and Intel) | `my-capture-@TAG@-macos-universal.zip` |
           | Windows (64-bit) | `my-capture-@TAG@-windows-amd64.zip` |
 
-          Unzip and run. My Capture needs [ffmpeg](https://ffmpeg.org) 5.1 or later
-          to capture video: `brew install ffmpeg` on macOS, `winget install Gyan.FFmpeg`
-          on Windows, or put `ffmpeg` next to the program.
+          Unzip and run. There is nothing else to install: the downloads include
+          [FFmpeg](https://ffmpeg.org), which My Capture uses to read the video. FFmpeg is
+          licensed under the LGPL; its licence and the link to its source are in the
+          `ffmpeg-licenses` folder inside each download.
 
           These builds are not signed by a registered developer, so both systems warn the
           first time you open them.

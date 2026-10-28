@@ -1,0 +1,100 @@
+.gitignore
+  h_32373f709924d7 1-4
+.agents/skills/my-capture/SKILL.md
+  h_32373f709924d7 1-117
+.gitattributes
+  h_32373f709924d7 1-5
+.github/release.yml
+  h_32373f709924d7 1-25
+.github/scripts/next-version.sh
+  h_32373f709924d7 1-47
+.github/workflows/release.yml
+  h_32373f709924d7 1-214
+.idea/.gitignore
+  h_32373f709924d7 1-10
+".idea/LNKD.tech Editor.xml"
+  h_32373f709924d7 1-178
+.idea/go.imports.xml
+  h_32373f709924d7 1-10
+.idea/misc.xml
+  h_32373f709924d7 1-11
+.idea/modules.xml
+  h_32373f709924d7 1-8
+.idea/my-capture.iml
+  h_32373f709924d7 1-10
+.idea/vcs.xml
+  h_32373f709924d7 1-6
+.kiro/settings/lsp.json
+  h_32373f709924d7 1-205
+.kiro/steering/00-copilot-instructions.md
+  h_32373f709924d7 1-248
+.kiro/steering/01-go-documentation.md
+  h_32373f709924d7 1-66
+.kiro/steering/02-go-code-style.md
+  h_32373f709924d7 1-44
+.kiro/steering/03-go-testing.md
+  h_32373f709924d7 1-41
+.kiro/steering/08-general-rules.md
+  h_32373f709924d7 1-21
+AGENTS.md
+  h_32373f709924d7 1-23
+Makefile
+  h_32373f709924d7 1-283
+README.md
+  h_32373f709924d7 1-275
+assets/assets.go
+  h_32373f709924d7 1-39
+assets/macos/Info.plist
+  h_32373f709924d7 1-46
+docs/architecture.md
+  h_32373f709924d7 1-193
+go.mod
+  h_32373f709924d7 1-45
+go.sum
+  h_32373f709924d7 1-81
+internal/audio/engine.go
+  h_32373f709924d7 1-292
+internal/audio/ring.go
+  h_32373f709924d7 1-164
+internal/config/config.go
+  h_32373f709924d7 1-193
+internal/ui/app.go
+  h_32373f709924d7 1-950
+internal/ui/help.md
+  h_32373f709924d7 1-58
+internal/ui/menu.go
+  h_32373f709924d7 1-241
+internal/ui/platform_darwin.go
+  h_32373f709924d7 1-222
+internal/ui/platform_other.go
+  h_32373f709924d7 1-12
+internal/ui/videoview.go
+  h_32373f709924d7 1-235
+internal/video/capture.go
+  h_32373f709924d7 1-368
+internal/video/device.go
+  h_32373f709924d7 1-246
+internal/video/parse.go
+  h_32373f709924d7 1-237
+internal/video/proc_other.go
+  h_32373f709924d7 1-13
+internal/video/proc_windows.go
+  h_32373f709924d7 1-26
+main.go
+  h_32373f709924d7 1-142
+packaging/macos/entitlements.plist
+  h_32373f709924d7 1-18
+tools/genicon/main.go
+  h_32373f709924d7 1-286
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "607981acaed75f62f30a83d5cc50ceabb29c7313",
+  "prompts": {},
+  "humans": {
+    "h_32373f709924d7": {
+      "author": "Steve O'Hara <sohara@pivotal-solutions.co.uk>"
+    }
+  }
+}

@@ -82,15 +82,24 @@ builds natively when run under MSYS2 on Windows.
 
 - **macOS**: the zip holds `My Capture.app`. The Info.plist in
   `assets/macos` carries the camera and microphone usage descriptions that
-  macOS requires before it will allow capture. The bundle is ad-hoc signed, so
-  on another Mac the first start needs right click, Open (or `xattr -cr "My
-  Capture.app"`). For distribution to others, sign with a Developer ID using
-  `SIGN_IDENTITY` and notarize the result yourself.
+  macOS requires before it will allow capture. The bundle is ad-hoc signed and
+  not notarized, so macOS warns that it can not check the app the first time
+  it is opened from a download. The user opens System Settings, Privacy &
+  Security, and clicks **Open Anyway** (on macOS 14 and earlier, right click
+  the app and choose Open instead). Running `xattr -cr "My Capture.app"` also
+  removes the warning. To avoid it for everyone, sign with a Developer ID using
+  `SIGN_IDENTITY` and notarize the result yourself; that needs a paid Apple
+  Developer account.
 - **Windows**: the zip holds `my-capture.exe` built as a GUI program, with no
-  console window. The Windows build has not been run on real Windows hardware.
+  console window. It is not code signed, so Windows SmartScreen shows "Windows
+  protected your PC" the first time: the user clicks **More info**, then **Run
+  anyway**. There is no installer; the user unzips the folder and runs the
+  program. The Windows build has not been run on real Windows hardware.
 - **ffmpeg**: the program looks for ffmpeg next to itself first. Passing
-  `FFMPEG_BIN` or `FFMPEG_EXE` puts a copy there (inside `Contents/MacOS` in
-  the macOS bundle), so the artefact works without installing ffmpeg.
+  `FFMPEG_BIN` or `FFMPEG_EXE` to `make` puts a copy there (inside
+  `Contents/MacOS` in the macOS bundle), so the artefact works without
+  installing ffmpeg. The automatic release workflow does not do this, so
+  downloads from GitHub need ffmpeg installed separately.
 
 Building never commits, tags or publishes anything. Set `VERSION` or tag the
 repository yourself to name a release.
@@ -123,18 +132,25 @@ but the Dock tooltip shows the file name.
 ### Releasing
 
 Releases are published to GitHub Releases by the **Release** workflow in
-`.github/workflows/release.yml`. It never runs by itself: you start it.
+`.github/workflows/release.yml`. It runs by itself **every time something is
+pushed to `master`**, and it can also be started by hand.
 
-1. Push the workflow to the repository's default branch. GitHub only offers
-   the button for workflows that are on the default branch.
-2. Open the repository on GitHub, then **Actions**, **Release**, **Run
-   workflow**.
-3. Choose what to increase and whether to publish straight away:
+**Automatic.** Each push to `master` publishes a new release with the minor
+number increased by one (v0.1.0, v0.2.0, v0.3.0, and so on). A run takes about
+15 minutes. Pull requests and other branches never release. To push to
+`master` without releasing, put `[skip ci]` in the commit message.
+
+**By hand**, to raise the patch or major number, or to make a draft to review
+before publishing:
+
+1. Open the repository on GitHub, then **Actions**, **Release**, **Run
+   workflow**, or run `gh workflow run release.yml -f bump=patch`.
+2. Choose what to increase and whether to publish straight away:
 
    | Input | Meaning | Default |
    |---|---|---|
    | `bump` | `minor` takes v0.3.1 to v0.4.0, `patch` takes it to v0.3.2, `major` to v1.0.0 | `minor` |
-   | `draft` | Create the release as a draft, to review and publish by hand | off |
+   | `draft` | Create the release as a draft, to review and publish by hand. Drafts do not appear on the repository's main page until published | off |
 
 The workflow then:
 

@@ -161,7 +161,10 @@ descriptions without which macOS gives a bundled application no capture access.
 
 ### Releases
 
-`.github/workflows/release.yml` is started by hand (`workflow_dispatch`). Job
+`.github/workflows/release.yml` runs on every push to `master` (always a minor
+bump, published at once) and on demand (`workflow_dispatch`, with bump and draft
+inputs). It never commits, so it can not trigger itself, and releases created
+with the workflow token do not start other workflows. Job
 `version` runs `.github/scripts/next-version.sh`, which raises the minor number
 of the highest `vMAJOR.MINOR.PATCH` tag (or the patch or major number if
 asked). Jobs `build-macos` and `build-windows` run `make check` and the

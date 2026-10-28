@@ -39,9 +39,11 @@ Needs Go 1.26+, a C compiler (cgo), make, and ffmpeg 5.1 or later at run time
 ## Releasing
 
 GitHub Releases are published by the Release workflow
-(`.github/workflows/release.yml`), started by hand from Actions, Release, Run
-workflow, once the workflow is on the default branch. Inputs: `bump` (`minor`
-by default, or `patch` or `major`) and `draft`. It finds the highest
+(`.github/workflows/release.yml`). It runs automatically on every push to
+`master` (always a minor bump, published at once; `[skip ci]` in the commit
+message skips it) and can be started by hand from Actions, Release, Run
+workflow, or `gh workflow run release.yml -f bump=patch`. Hand-run inputs:
+`bump` (`minor` by default, or `patch` or `major`) and `draft`. It finds the highest
 `vMAJOR.MINOR.PATCH` tag and increments it (minor: v0.3.1 to v0.4.0; the first
 release is v0.1.0), runs `make check`, builds the macOS zip (macOS runner) and
 Windows zip (Windows runner, MSYS2), then creates the tag and release with
@@ -49,7 +51,8 @@ generated notes (categories in `.github/release.yml`, by pull request label),
 both zips, `SHA256SUMS.txt` and build provenance attestations. The version is
 built in: `my-capture -version`. Verify a download with
 `gh attestation verify FILE --repo steveohara/my-capture`. Never create tags or
-releases by hand or from a script; use the workflow.
+releases by hand or from a script; use the workflow. Pushing to master therefore
+releases: do not push work in progress to master.
 
 ## Usage
 

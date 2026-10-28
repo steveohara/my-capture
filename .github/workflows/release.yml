@@ -1,6 +1,7 @@
 # Release workflow for my-capture.
 #
-# Starting it (Actions tab, "Release", "Run workflow") does all of this:
+# It runs automatically on every push to master, and can also be started by
+# hand (Actions tab, "Release", "Run workflow"). Each run does all of this:
 #
 #   1. Works out the next version from the existing tags. By default the minor
 #      number goes up: v0.3.1 becomes v0.4.0. The first release is v0.1.0.
@@ -11,9 +12,11 @@
 #      with release notes, the zip files, a SHA256SUMS.txt checksum file and
 #      build provenance attestations that tie each file to this workflow run.
 #
-# Nothing here runs by itself on a push or a pull request. A release only
-# happens when someone starts the workflow, and the workflow file must be on
-# the repository's default branch for the "Run workflow" button to appear.
+# On a push the version always goes up by one minor number and the release is
+# published at once. To raise the patch or major number instead, or to make a
+# draft to review first, start the workflow by hand and choose those options.
+# Pull requests and other branches never release. To push to master without
+# releasing, put [skip ci] in the commit message.
 #
 # Repository settings: none are needed beyond the permissions declared below.
 # Artifact attestations need a public repository (or a paid plan); if they are
@@ -23,6 +26,9 @@
 name: Release
 
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
     inputs:
       bump:
@@ -42,7 +48,9 @@ on:
 permissions:
   contents: read
 
-# Two runs at once could choose the same version, so they queue instead.
+# Two runs at once could choose the same version, so they queue instead. If
+# several pushes arrive while a run is going, GitHub keeps only the newest
+# waiting one, and its version is worked out when it starts.
 concurrency:
   group: release
   cancel-in-progress: false
@@ -191,7 +199,11 @@ jobs:
           to capture video: `brew install ffmpeg` on macOS, `winget install Gyan.FFmpeg`
           on Windows, or put `ffmpeg` next to the program.
 
-          The macOS app is not notarized. On first start, right click it and choose Open.
+          These builds are not signed by a registered developer, so both systems warn the
+          first time you open them.
+          - macOS: open System Settings, Privacy & Security, and click Open Anyway
+            (on macOS 14 and earlier, right click the app and choose Open).
+          - Windows: on the "Windows protected your PC" screen, click More info, then Run anyway.
 
           Check a download with `sha256sum -c SHA256SUMS.txt`, or with
           `gh attestation verify <file> --repo @REPO@`.

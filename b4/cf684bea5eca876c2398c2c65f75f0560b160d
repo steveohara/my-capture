@@ -1,0 +1,32 @@
+.agents/skills/my-capture/SKILL.md
+  h_32373f709924d7 25,31-32,36-39,88,117-118
+.github/workflows/release.yml
+  h_32373f709924d7 10-12,101-113,149-150,152,158-164,223-226
+.gitignore
+  h_32373f709924d7 3
+.idea/jsonSchemas.xml
+  h_32373f709924d7 1-25
+Makefile
+  h_32373f709924d7 38-45,47-48,52-64,105-106,129-131,142-145,147-152,158-166,230-246,292,310-314,328,339-343
+README.md
+  h_32373f709924d7 14-15,23-24,61-62,64,74-76,105-130,285,292
+docs/architecture.md
+  h_32373f709924d7 114,179-193,198-199
+internal/config/config.go
+  h_32373f709924d7 12-14,165-167
+internal/ui/help.md
+  h_32373f709924d7 48
+packaging/ffmpeg/build.sh
+  h_32373f709924d7 1-265
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b4cf684bea5eca876c2398c2c65f75f0560b160d",
+  "prompts": {},
+  "humans": {
+    "h_32373f709924d7": {
+      "author": "Steve O'Hara <sohara@pivotal-solutions.co.uk>"
+    }
+  }
+}

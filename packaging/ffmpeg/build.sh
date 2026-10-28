@@ -145,7 +145,10 @@ build_one() {
 	(
 		cd "$dir"
 		"$source_tree/configure" "${COMMON[@]}" "${COMPONENTS[@]}" "$@"
-		make -j"$jobs" ffmpeg
+		# The make target is "ffmpeg.exe" on Windows and "ffmpeg" elsewhere, and
+		# configure records which in EXESUF.
+		exesuf="$(sed -n 's/^EXESUF=//p' ffbuild/config.mak)"
+		make -j"$jobs" "ffmpeg$exesuf"
 	)
 	# The program is called ffmpeg.exe on Windows. The copy keeps the suffix.
 	local exe="ffmpeg"

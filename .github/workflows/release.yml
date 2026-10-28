@@ -105,12 +105,8 @@ jobs:
     needs: version
     runs-on: windows-latest
     steps:
-      # Keep Unix line endings. Otherwise git converts the files to Windows
-      # line endings on checkout and "make fmt-check" reports every file.
-      - name: Keep line endings
-        shell: bash
-        run: git config --global core.autocrlf false
-
+      # .gitattributes makes the checkout use Unix line endings; without that
+      # "make fmt-check" reports every file on Windows.
       - uses: actions/checkout@v7
 
       - uses: actions/setup-go@v7

@@ -1,5 +1,7 @@
-# Keep shell scripts and the Makefile on Unix line endings everywhere, so they
-# still run when the repository is checked out on Windows.
-* text=auto
-*.sh text eol=lf
-Makefile text eol=lf
+# Check every text file out with Unix (LF) line endings on every platform.
+#
+# "text=auto" alone checks files out with the platform's own line endings, so
+# on Windows (including the Windows build in the release workflow) every file
+# became CRLF, and "gofmt -l" then reported every Go file as unformatted.
+# gofmt, the Makefile and the shell scripts all need LF.
+* text=auto eol=lf

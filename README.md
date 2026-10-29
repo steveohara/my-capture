@@ -1,7 +1,7 @@
 # my-capture
 
-A small desktop program that shows the picture and plays the sound of a USB
-video capture device. It targets macOS and Windows.
+A small program that shows the picture and plays the sound of a USB video
+capture device. It targets macOS, Windows and iPadOS.
 
 - Pick the video device, its mode (resolution and frame rate), the audio input
   and the audio output in the window. Video starts as soon as a device is picked.
@@ -298,6 +298,59 @@ program started, it is chosen again automatically.
 - **Crackling sound**: raise the audio delay.
 - **`-list-devices`** shows what the program can see without opening the window.
 
+## My Capture for iPad
+
+`ios/` holds a separate, native Swift/SwiftUI app for iPadOS: iPadOS does not
+allow starting another program such as ffmpeg, so the Go capture code used by
+the desktop versions cannot run there. It reuses the desktop app's design
+(device and mode pickers, aspect modes, an audio delay slider) but is built
+and signed entirely with Apple's own tools.
+
+### Requirements
+
+| What | Why |
+|---|---|
+| A Mac with Xcode | Building and signing the app |
+| [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`) | Generates the Xcode project from `ios/project.yml`, which is not kept in git |
+| A free Apple ID, signed into Xcode | Lets the app be installed on your own iPad without a paid developer account |
+| An iPad running iPadOS 17 or later, with a USB-C port | The capture card's video appears as an "external" camera, which iPadOS only lists from version 17 |
+
+### Build and run
+
+```sh
+cd ios
+xcodegen
+open MyCapture.xcodeproj
+```
+
+In Xcode, select the `MyCapture` target, choose your own team under Signing &
+Capabilities (Automatic signing), plug in the iPad, and run. The first run on
+the device needs Developer Mode turned on (Settings, Privacy & Security,
+Developer Mode), which iPadOS prompts for.
+
+Plugging a USB-C video capture card into the iPad makes it appear as a video
+device the same way a webcam would; choose it from the video device menu.
+Nothing is recorded, and the sound plays through whatever output is chosen
+with the system output button (`AVRoutePickerView`), because iPadOS does not
+let an app choose its own audio output.
+
+### Project layout (`ios/`)
+
+```
+project.yml                    XcodeGen project description
+MyCapture/MyCaptureApp.swift    entry point, creates the two controllers
+MyCapture/ContentView.swift     the window: picture, control panel, banner
+MyCapture/VideoController.swift AVCaptureDevice discovery and the capture session
+MyCapture/AudioController.swift AVAudioEngine input, delay and output
+MyCapture/PreviewView.swift     the preview layer and the system route picker
+MyCapture/AspectMode.swift      the aspect modes, shared in spirit with internal/ui
+MyCapture/HelpView.swift        the Help sheet
+MyCapture/AboutView.swift       the About sheet
+```
+
+See [docs/architecture.md](docs/architecture.md) for how the iPad version
+compares with the desktop ones.
+
 ## How it works
 
 See [docs/architecture.md](docs/architecture.md).
@@ -316,4 +369,5 @@ internal/config         environment variables and the help text for them
 internal/video          ffmpeg device discovery and frame capture
 internal/audio          miniaudio capture, playback and the ring buffer
 internal/ui             the Fyne window, menus, help text (help.md) and the video widget
+ios                     My Capture for iPad: a separate Swift/SwiftUI app (see above)
 ```

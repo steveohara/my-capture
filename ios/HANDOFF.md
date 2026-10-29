@@ -56,56 +56,38 @@ Written, never compiled:
 
 ## Still to do
 
-1. **PreviewView rotation fix (rejected edit, not applied).** The preview layer
-   has no connection until a device is attached, so `updateUIView` cannot set
-   `videoRotationAngle = 0`, `automaticallyAdjustsVideoMirroring = false` and
-   `isVideoMirrored = false` reliably. Add to `PreviewUIView` a `watch(session:)`
-   that sets `previewLayer.session` and observes
-   `AVCaptureSession.didStartRunningNotification`, plus a
-   `connectionSettings()` method that applies those three settings; call
-   `watch` from `makeUIView` and `connectionSettings()` from `updateUIView`.
-2. **`ContentView.swift`** (missing; the app does not build without it):
-   - Black background; `PreviewView` filling the window, with
-     `.aspectRatio(mode.ratio, contentMode: .fit)` when `AspectMode.ratio` is
-     set, and `mode.gravity` otherwise. Aspect choice kept with `@AppStorage`.
-   - A top control panel (material background): Menu pickers for video device
-     and mode (`VideoController`), audio input (`AudioController.inputs`),
-     `RoutePicker` plus `outputName` for the output, a delay slider
-     (`AudioController.delayRange`) that calls `setDelay` only when editing
-     ends, an aspect menu, and Help and About buttons.
-   - Tap the picture to hide or show the panel; hide status bar and home
-     indicator when hidden (`.statusBarHidden`, `.persistentSystemOverlays`).
-   - Show `video.message` and `audio.message` in a banner.
-   - `.onAppear`: `video.start()`, `audio.start()`,
-     `UIApplication.shared.isIdleTimerDisabled = true`; on `scenePhase`
-     `.active`: `video.resume()`, `audio.resume()`.
-3. **`HelpView.swift` and `AboutView.swift`**: sheets. Help text adapted from
-   `internal/ui/help.md` (leave out keyboard shortcuts and environment
-   variables, which do not exist on iPad; mention the system route picker and
-   the iPad volume buttons). About shows version from
-   `CFBundleShortVersionString`, the repo link `https://github.com/steveohara/my-capture`,
-   and the issues link.
-4. **README.md**: add a "My Capture for iPad" section (requirements: Mac,
-   Xcode, `brew install xcodegen`, `xcodegen` in `ios/`, set the signing team,
-   run on the iPad; iPadOS 17 or later; USB-C iPad; the card's video appears as
-   an external camera) and update the intro line that says it targets macOS and
-   Windows. Optionally note it in `docs/architecture.md`.
-5. **Build and test on the Mac**: `cd ios && xcodegen`, open
+Items 1 to 4 and 6 below are done. What remains needs a Mac with Xcode, a free
+Apple ID signed in, and the physical iPad with the Guermok capture card; see
+item 5.
+
+1. ~~**PreviewView rotation fix.**~~ Done: `PreviewUIView.watch(session:)`
+   observes `AVCaptureSession.didStartRunningNotification` and reapplies
+   `connectionSettings()` (rotation, mirroring) whenever the session gets a
+   fresh connection; `updateUIView` also calls it so a later aspect change
+   does not lose the setting.
+2. ~~**`ContentView.swift`**~~ Done, with the layout described below.
+3. ~~**`HelpView.swift` and `AboutView.swift`**~~ Done, adapted from
+   `internal/ui/help.md` with shortcuts and environment variables left out.
+4. ~~**README.md**~~ Done: a "My Capture for iPad" section, the project
+   layout table, and the intro line now mention iPadOS.
+   `docs/architecture.md` has a matching section.
+5. **Build and test on the Mac**: `cd ios && xcodegen generate`, open
    `MyCapture.xcodeproj`, set the team, run on the iPad with the Guermok card.
-   Expected checks:
+   `xcodegen generate` and an unsigned simulator build
+   (`xcodebuild ... -destination 'platform=iOS Simulator,name=iPad (A16)'
+   CODE_SIGNING_ALLOWED=NO`) both succeed with no warnings as of this note,
+   and the control panel, Help and About sheets, and the microphone
+   permission prompt all render correctly in the simulator. None of that
+   exercises real hardware. Expected checks still needed on the device:
    - the mode list contains 1920x1080 @ 60 fps and it is chosen first;
    - the picture appears and does not rotate with the iPad;
    - the card's audio input is chosen automatically (USB audio port);
    - the delay slider changes the audio delay without crashing;
    - unplugging the card shows "The video device was unplugged." and plugging
      it back restarts it.
-   Likely compile issues to watch for, since nothing has been built:
-   `CMFormatDescriptionGetMediaSubType` switch patterns in `codecName`,
-   `AVAudioApplication.requestRecordPermission` availability, and Swift 5 mode
-   concurrency warnings from touching `session` inside `sessionQueue` blocks.
-6. **App icon**: render a 1024x1024 opaque PNG (for example with
-   `tools/genicon`) into `Assets.xcassets/AppIcon.appiconset` and name it in
-   `Contents.json`.
+6. ~~**App icon**~~ Done: `Assets.xcassets/AppIcon.appiconset/icon-1024.png`,
+   a 1024x1024 opaque PNG rendered with the same shapes as `tools/genicon`
+   (full bleed, no macOS transparent margin), named in `Contents.json`.
 7. **Possible latency tuning if the user reports delay on iPad**: the audio
    I/O buffer is requested at 5 ms but iPadOS may choose more; the delay
    slider compensates for video latency, which is low because the preview layer

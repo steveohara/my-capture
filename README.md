@@ -328,6 +328,11 @@ Capabilities (Automatic signing), plug in the iPad, and run. The first run on
 the device needs Developer Mode turned on (Settings, Privacy & Security,
 Developer Mode), which iPadOS prompts for.
 
+Because the capture card occupies the iPad's only USB-C port, a debugging
+cable to the Mac often cannot be plugged in at the same time. See
+[ios/DEBUGGING.md](ios/DEBUGGING.md) for debugging over Wi-Fi (no cable, once
+paired) or over a USB-C hub.
+
 Plugging a USB-C video capture card into the iPad makes it appear as a video
 device the same way a webcam would; choose it from the video device menu.
 Nothing is recorded, and the sound plays through whatever output is chosen

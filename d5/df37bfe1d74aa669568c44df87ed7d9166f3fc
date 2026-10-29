@@ -1,0 +1,30 @@
+.agents/skills/my-capture/SKILL.md
+  h_32373f709924d7 13-17
+README.md
+  h_32373f709924d7 3-4,301-353,372
+docs/architecture.md
+  h_32373f709924d7 213-240
+ios/HANDOFF.md
+  h_32373f709924d7 59-74,76-81,88-90
+ios/MyCapture/AboutView.swift
+  h_32373f709924d7 1-63
+ios/MyCapture/Assets.xcassets/AppIcon.appiconset/Contents.json
+  h_32373f709924d7 3
+ios/MyCapture/ContentView.swift
+  h_32373f709924d7 1-205
+ios/MyCapture/HelpView.swift
+  h_32373f709924d7 1-95
+ios/MyCapture/PreviewView.swift
+  h_32373f709924d7 17-21,29-61,75,81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d5df37bfe1d74aa669568c44df87ed7d9166f3fc",
+  "prompts": {},
+  "humans": {
+    "h_32373f709924d7": {
+      "author": "Steve O'Hara <sohara@pivotal-solutions.co.uk>"
+    }
+  }
+}

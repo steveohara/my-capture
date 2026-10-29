@@ -1,0 +1,44 @@
+# XcodeGen project description for the iPad version of My Capture.
+#
+# The Xcode project is generated from this file, so it is not kept in git.
+# On a Mac: brew install xcodegen, then run "xcodegen" in this folder, then
+# open MyCapture.xcodeproj. See "My Capture for iPad" in the top level README.
+name: MyCapture
+
+options:
+  bundleIdPrefix: io.github.steveohara
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+targets:
+  MyCapture:
+    type: application
+    platform: iOS
+    sources:
+      - MyCapture
+    settings:
+      base:
+        PRODUCT_NAME: MyCapture
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.steveohara.mycapture
+        # iPad only: the external camera support this app relies on is for
+        # iPadOS, and the layout is designed for a large screen.
+        TARGETED_DEVICE_FAMILY: "2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: My Capture
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_NSCameraUsageDescription: My Capture shows the picture of your USB video capture device.
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: My Capture plays the sound of your USB capture device. Nothing is recorded.
+        # Set DEVELOPMENT_TEAM in Xcode (Signing & Capabilities) to your own
+        # team so the app can be installed on your iPad.
+        CODE_SIGN_STYLE: Automatic

@@ -3,3 +3,6 @@ dist/
 build/
 .DS_Store
 *.exe
+
+ios/*.xcodeproj
+xcuserdata/

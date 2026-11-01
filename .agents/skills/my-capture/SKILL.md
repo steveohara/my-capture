@@ -10,6 +10,11 @@ captured by ffmpeg (AVFoundation on macOS, DirectShow on Windows). Audio is
 captured and played by miniaudio with the input and output chosen
 independently. Nothing is recorded and there is no volume control.
 
+A separate native app, `ios/`, provides the same picture and sound for iPadOS
+17+, built with XcodeGen and Xcode rather than this Makefile; see "My Capture
+for iPad" in README.md and the end of docs/architecture.md. It shares no code
+with the Go program, since iPadOS cannot run ffmpeg as a child process.
+
 ## Build, test and package
 
 Use the Makefile; `make help` lists everything.

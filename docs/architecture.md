@@ -210,3 +210,39 @@ reuses it; the release workflow caches that folder keyed on the script's hash.
   device and mode parsing is covered by sample output only and has not been run
   against real hardware.
 - Linux is not a target. `internal/video` returns `ErrUnsupportedPlatform`.
+
+## My Capture for iPad
+
+`ios/` is a separate program, not a port of this Go code: iPadOS does not let
+an app start another program, so the ffmpeg child process this architecture
+relies on is not available there. It is a native Swift/SwiftUI app built with
+AVFoundation and AVAudioEngine, built and signed with XcodeGen and Xcode
+rather than the Makefile.
+
+- **Video** comes from an `AVCaptureSession` shown directly by an
+  `AVCaptureVideoPreviewLayer` (`PreviewView.swift`), so unlike the pipe in
+  `internal/video`, no frame is ever copied into the program's own memory.
+  Since iPadOS 17, AVFoundation lists USB video class devices plugged into the
+  USB-C port as "external" cameras (`VideoController.swift`).
+- **Audio** runs an `AVAudioEngine` graph: input node, `AVAudioUnitDelay`, main
+  mixer (`AudioController.swift`). The delay node plays the part the ring
+  buffer plays in `internal/audio`, holding audio back by the chosen number of
+  milliseconds so it lines up with the picture. iPadOS lets an app choose its
+  audio input but not its output; the output is chosen with the system's own
+  route picker (`AVRoutePickerView`, wrapped as `RoutePicker` in
+  `PreviewView.swift`).
+- **The window** (`ContentView.swift`) is one SwiftUI view: the picture behind
+  a translucent control panel that can be hidden by tapping the picture, plus
+  Help and About sheets (`HelpView.swift`, `AboutView.swift`) adapted from
+  `internal/ui/help.md` with the keyboard shortcuts and environment variables
+  removed, since neither exists on iPadOS. The video device and audio input
+  pickers each offer `(none)` to stop independently. Rotation
+  (`RotationMode.swift`) is a manual four-way choice rather than automatic,
+  since neither a capture card's picture nor a built-in camera's has a fixed
+  relationship to how the iPad is held; the fixed aspect ratios
+  (`AspectMode.ratio(rotatedBy:)`) and the preview layer's own bounds
+  (`PreviewUIView.layoutSubviews`) both account for the chosen rotation
+  swapping width and height at 90 and 270 degrees, which `videoGravity` and
+  an unrotation-aware aspect ratio would otherwise get wrong.
+- There is no bundled ffmpeg, no environment variable configuration, and no
+  window chrome to manage: iPadOS only ever shows the app full screen.

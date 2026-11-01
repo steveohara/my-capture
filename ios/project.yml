@@ -39,6 +39,19 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_NSCameraUsageDescription: My Capture shows the picture of your USB video capture device.
         INFOPLIST_KEY_NSMicrophoneUsageDescription: My Capture plays the sound of your USB capture device. Nothing is recorded.
-        # Set DEVELOPMENT_TEAM in Xcode (Signing & Capabilities) to your own
-        # team so the app can be installed on your iPad.
+        # Declares no non-exempt encryption, so App Store Connect does not
+        # ask the export compliance question on every upload. True: the app
+        # makes no network calls of its own and uses no custom encryption;
+        # the only network use is opening ordinary HTTPS links (GitHub) in
+        # the system browser from About, which Apple's own rules exempt.
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        # DEVELOPMENT_TEAM is set here, not just in Xcode's Signing &
+        # Capabilities tab, because this project's .xcodeproj is regenerated
+        # from this file by "xcodegen generate" (see the top of this file).
+        # A team chosen only in Xcode's UI lives in the generated .xcodeproj
+        # and is silently lost the next time that command runs; setting it
+        # here makes it part of the source of truth XcodeGen reads, so it
+        # survives every regeneration. This is sohara@pivotal-solutions.co.uk's
+        # free Apple ID team; change it to build with a different Apple ID.
+        DEVELOPMENT_TEAM: DV8Q73MK77
         CODE_SIGN_STYLE: Automatic

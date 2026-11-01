@@ -22,8 +22,15 @@
 //   - There is no volume control, because the iPad's own volume buttons do it.
 //
 // THREADING
-// Everything runs on the main thread. AVAudioEngine does its real time work on
-// its own threads.
+// Most of the controller runs on the main thread, where SwiftUI calls it and
+// where AVAudioEngine's own node graph setup belongs. The two places that
+// call AVAudioSession.setActive(_:), in configure() and resume(), run that
+// one blocking call on a background queue first, because setActive can take
+// long enough to be felt as a UI freeze if called on the main thread (Xcode's
+// Thread Performance Checker flags it for exactly this reason); everything
+// after it that touches a @Published property or the engine hops back to the
+// main thread before running. AVAudioEngine does its real time audio work on
+// its own threads regardless of which thread started it.
 
 import AVFoundation
 import Combine
@@ -69,6 +76,12 @@ final class AudioController: ObservableObject {
     /// UserDefaults key holding the last chosen input's name.
     private let inputNameKey = "audioInputName"
 
+    /// True once the user has explicitly chosen "(none)" with stopInput(),
+    /// so refreshInputs() leaves the engine stopped instead of restarting it
+    /// with whatever input it would otherwise prefer. Reset by
+    /// selectInput(uid:) as soon as the user picks a real input again.
+    private var explicitlyStopped = false
+
     /// UserDefaults key holding the delay in milliseconds.
     private let delayKey = "audioDelayMs"
 
@@ -100,26 +113,56 @@ final class AudioController: ObservableObject {
     }
 
     /// Restarts the audio path after the app returns to the foreground.
+    /// Does nothing if the user had explicitly chosen "(none)" with
+    /// stopInput(): coming back to the foreground should not turn the
+    /// microphone back on by itself. setActive is a blocking call, so it
+    /// runs off the main thread; the engine and message are only touched
+    /// back on the main thread, since message is @Published and engine is
+    /// otherwise only used there (see the file header's threading note).
     func resume() {
-        guard started else { return }
-        try? AVAudioSession.sharedInstance().setActive(true)
-        if !engine.isRunning { rebuildAndStart() }
+        guard started, !explicitlyStopped else { return }
+        DispatchQueue.global(qos: .userInitiated).async {
+            try? AVAudioSession.sharedInstance().setActive(true)
+            DispatchQueue.main.async {
+                if !self.engine.isRunning { self.rebuildAndStart() }
+            }
+        }
     }
 
     /// Sets up the audio session and the observers, then starts the engine.
+    /// The AVAudioSession calls, in particular setActive, are blocking, so
+    /// they run off the main thread; everything from started = true onward
+    /// touches @Published properties or the engine and so runs back on the
+    /// main thread (see the file header's threading note).
     private func configure() {
         guard !started else { return }
-        let session = AVAudioSession.sharedInstance()
-        do {
-            try session.setCategory(.playAndRecord, mode: .measurement,
-                                    options: [.allowBluetoothA2DP, .defaultToSpeaker])
-            try session.setPreferredSampleRate(48000)
-            try session.setPreferredIOBufferDuration(0.005)
-            try session.setActive(true)
-        } catch {
-            message = "Could not start audio: \(error.localizedDescription)"
-            return
+        DispatchQueue.global(qos: .userInitiated).async {
+            let session = AVAudioSession.sharedInstance()
+            var failure: String?
+            do {
+                try session.setCategory(.playAndRecord, mode: .measurement,
+                                        options: [.allowBluetoothA2DP, .defaultToSpeaker])
+                try session.setPreferredSampleRate(48000)
+                try session.setPreferredIOBufferDuration(0.005)
+                try session.setActive(true)
+            } catch {
+                failure = "Could not start audio: \(error.localizedDescription)"
+            }
+            DispatchQueue.main.async {
+                if let failure {
+                    self.message = failure
+                    return
+                }
+                self.finishConfiguring()
+            }
         }
+    }
+
+    /// The part of configure() that touches @Published properties, the
+    /// notification center and the engine, and so must run on the main
+    /// thread. Split out from configure() only so the AVAudioSession setup
+    /// above it can run on a background queue first.
+    private func finishConfiguring() {
         started = true
 
         let center = NotificationCenter.default
@@ -147,14 +190,20 @@ final class AudioController: ObservableObject {
     // -----------------------------------------------------------------------
 
     /// Reacts to a device being plugged in or removed, or the output changing.
+    /// Does not restart the engine if the user had explicitly chosen
+    /// "(none)" with stopInput(): a route change (for example unplugging the
+    /// capture card) should not turn the microphone back on by itself.
     private func routeChanged() {
         refreshInputs()
-        if !engine.isRunning { rebuildAndStart() }
+        if !engine.isRunning, !explicitlyStopped { rebuildAndStart() }
     }
 
     /// Reads the list of inputs and keeps the selection valid. A USB audio
-    /// input is preferred when nothing was chosen, because that is the capture
-    /// device's own sound.
+    /// input is preferred when nothing was chosen yet. If the user had
+    /// explicitly chosen "(none)" (selectedInputUID is nil but the engine is
+    /// not running; see stopInput()), refreshing the list does not restart
+    /// it: only a genuinely new launch or a route change while an input was
+    /// already selected does.
     func refreshInputs() {
         let session = AVAudioSession.sharedInstance()
         inputs = session.availableInputs ?? []
@@ -162,6 +211,7 @@ final class AudioController: ObservableObject {
 
         let current = inputs.first(where: { $0.uid == selectedInputUID })
         if current != nil { return }
+        if explicitlyStopped { return }
 
         let saved = UserDefaults.standard.string(forKey: inputNameKey)
         let choice = inputs.first(where: { $0.portName == saved })
@@ -173,7 +223,19 @@ final class AudioController: ObservableObject {
 
     /// Selects an input by uniqueID.
     func selectInput(uid: String) {
+        explicitlyStopped = false
         select(input: inputs.first(where: { $0.uid == uid }))
+    }
+
+    /// Stops listening to any audio input and silences the output, the
+    /// microphone equivalent of VideoController's selectDevice(id: nil).
+    /// Kept selected (rather than snapping back to an input on the next
+    /// refreshInputs()) until the user picks one again.
+    func stopInput() {
+        explicitlyStopped = true
+        selectedInputUID = nil
+        message = nil
+        engine.stop()
     }
 
     /// Makes port the input of the session.
@@ -187,6 +249,7 @@ final class AudioController: ObservableObject {
             selectedInputUID = port.uid
             UserDefaults.standard.set(port.portName, forKey: inputNameKey)
             message = nil
+            if !engine.isRunning { rebuildAndStart() }
         } catch {
             message = "Could not use \"\(port.portName)\": \(error.localizedDescription)"
         }

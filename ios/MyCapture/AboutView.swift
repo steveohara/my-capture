@@ -1,3 +1,5 @@
+// xcode: set sdk=iOS
+
 // AboutView.swift: the About sheet.
 //
 // Shows the version from the app bundle (CFBundleShortVersionString, set by
@@ -36,7 +38,7 @@ struct AboutView: View {
 
                 Text("""
                 Shows the picture and plays the sound of a USB video capture \
-                device. Nothing is recorded.
+                device, with aspect and rotation controls. Nothing is recorded.
                 """)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)

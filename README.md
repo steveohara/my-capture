@@ -323,10 +323,22 @@ xcodegen
 open MyCapture.xcodeproj
 ```
 
-In Xcode, select the `MyCapture` target, choose your own team under Signing &
-Capabilities (Automatic signing), plug in the iPad, and run. The first run on
-the device needs Developer Mode turned on (Settings, Privacy & Security,
+In Xcode, select the `MyCapture` target and check Signing & Capabilities: the
+free Apple ID's team (`DV8Q73MK77` for `sohara@pivotal-solutions.co.uk`) is
+already set from `project.yml`'s `DEVELOPMENT_TEAM`, so nothing needs
+choosing there normally. Plug in the iPad and run. The first run on the
+device needs Developer Mode turned on (Settings, Privacy & Security,
 Developer Mode), which iPadOS prompts for.
+
+To build with a different Apple ID instead, change `DEVELOPMENT_TEAM` in
+`ios/project.yml` to that account's team ID (find it with `security
+find-identity -v -p codesigning` once signed into Xcode with that Apple ID,
+or in Xcode, Settings, Accounts), then run `xcodegen generate` again. Setting
+the team only in Xcode's Signing & Capabilities tab, rather than in
+`project.yml`, does not last: the `.xcodeproj` is regenerated from
+`project.yml` by `xcodegen generate`, which this project's own tooling and
+any new Swift file both trigger, and a team chosen only in Xcode's UI is
+silently lost the next time that happens.
 
 Because the capture card occupies the iPad's only USB-C port, a debugging
 cable to the Mac often cannot be plugged in at the same time. See
@@ -337,7 +349,11 @@ Plugging a USB-C video capture card into the iPad makes it appear as a video
 device the same way a webcam would; choose it from the video device menu.
 Nothing is recorded, and the sound plays through whatever output is chosen
 with the system output button (`AVRoutePickerView`), because iPadOS does not
-let an app choose its own audio output.
+let an app choose its own audio output. The video device and audio input
+pickers both offer `(none)` to stop the picture or the sound independently.
+A manual Rotate control turns the picture in 90 degree steps: neither a
+capture card's picture nor a built-in camera's has any fixed relationship
+to how the iPad is held, so this is a user choice rather than automatic.
 
 ### Project layout (`ios/`)
 
@@ -349,6 +365,7 @@ MyCapture/VideoController.swift AVCaptureDevice discovery and the capture sessio
 MyCapture/AudioController.swift AVAudioEngine input, delay and output
 MyCapture/PreviewView.swift     the preview layer and the system route picker
 MyCapture/AspectMode.swift      the aspect modes, shared in spirit with internal/ui
+MyCapture/RotationMode.swift    the four manual picture rotations
 MyCapture/HelpView.swift        the Help sheet
 MyCapture/AboutView.swift       the About sheet
 ```

@@ -8,6 +8,131 @@ required or Wi-Fi is not available).
 
 Wireless debugging is the one to use day to day. The hub is a fallback.
 
+If Xcode has never been opened for this project before, or the Run button is
+missing or greyed out, start with "First time setup" below before either
+option.
+
+## First time setup
+
+This section is for anyone new to Xcode. It covers generating the project,
+opening it correctly, and getting the Run button to work, before pairing or
+debugging comes into it at all.
+
+### Generate the Xcode project
+
+`MyCapture.xcodeproj` is not kept in git; `ios/project.yml` is the source of
+truth that [XcodeGen](https://github.com/yonaskolb/XcodeGen) reads to create
+it. Run this every time `project.yml` changes, and the first time there is no
+`.xcodeproj` yet:
+
+```sh
+cd ios
+xcodegen generate
+```
+
+This writes `ios/MyCapture.xcodeproj`.
+
+### Open the project, not a folder
+
+Open `ios/MyCapture.xcodeproj` itself with **File, Open** (`Cmd+O`) in Xcode,
+or `open MyCapture.xcodeproj` from the `ios` folder in a terminal. Do not open
+the `ios` folder or the repository root as a folder: Xcode will show the
+Swift files but without a proper iOS target, so the destination picker has
+nothing to build against and the Run button stays unusable.
+
+### Set a signing team
+
+A free Apple ID is enough; no paid developer account is needed. The team is
+set in `ios/project.yml` (`DEVELOPMENT_TEAM`), not chosen by hand in Xcode,
+because of how the project is regenerated; see "Why the team belongs in
+project.yml" below. Signing & Capabilities should already show a team filled
+in as soon as the project is opened.
+
+1. In the left sidebar, click the blue **MyCapture** project icon at the top.
+2. Under **TARGETS**, select **MyCapture**.
+3. Open the **Signing & Capabilities** tab and confirm a **Team** is shown.
+   If it reads "None" the first time, see "Why the team belongs in
+   project.yml" below rather than choosing one directly in this tab.
+
+### Why the team belongs in project.yml, not in Xcode's UI
+
+Choosing a team directly in Signing & Capabilities seems to work at first,
+but `ios/MyCapture.xcodeproj` is a generated file: `xcodegen generate`
+rebuilds it from `ios/project.yml` alone, discarding anything set only in the
+`.xcodeproj` itself. This project's own tooling runs that command whenever a
+new Swift file is added or `project.yml` changes, so a team chosen only in
+Xcode's UI is silently lost the next time that happens, which then blocks
+Run with a signing error until the team is chosen again. `project.yml`
+already sets `DEVELOPMENT_TEAM: DV8Q73MK77` (the free Apple ID
+`sohara@pivotal-solutions.co.uk`), so this should not come up normally.
+
+To sign with a different Apple ID:
+
+1. Sign into that Apple ID in Xcode, Settings, Accounts.
+2. Find its team ID: run `security find-identity -v -p codesigning` in a
+   terminal and read the ID in parentheses after the account's email, or in
+   Xcode, Settings, Accounts, select the team and look at its details.
+3. Change `DEVELOPMENT_TEAM` in `ios/project.yml` to that ID.
+4. Run `xcodegen generate` again, and reopen the project if it was open.
+
+### Pick the iPad as the run destination
+
+Recent Xcode versions replaced the old **Window, Devices and Simulators**
+panel with a separate **Device Hub** app, and moved the run destination into
+a single pill-shaped control in the main window's toolbar (it reads "My Mac"
+until a device or simulator is chosen instead).
+
+1. Connect the iPad with a USB-C cable (capture card unplugged for now).
+2. On the iPad, tap **Trust This Computer** and enter the passcode.
+3. Wait for Xcode to finish preparing the device. Progress shows either in
+   the destination pill's dropdown or in Device Hub (open it from **Xcode,
+   Open Developer Tool, Device Hub**, or launch it on its own from Spotlight;
+   it does not need Xcode running).
+4. Click the destination pill in the toolbar and choose the iPad from the
+   list.
+5. If the pill instead reads something like "iPad Pro 11-inch (M4) (mismatched
+   platform)", the project that is open does not target iOS for the currently
+   selected scheme. Check that `ios/MyCapture.xcodeproj` was opened directly
+   (see above) and that the scheme dropdown next to the destination pill says
+   **MyCapture**. `project.yml` sets `platform: iOS` and
+   `TARGETED_DEVICE_FAMILY: "2"` (iPad) for this target, so once the right
+   project and scheme are selected the mismatch clears.
+
+### Build and run
+
+Press **Cmd+R**. If the Run button itself is not visible in a narrow or
+partially off-screen window, `Cmd+R` still works, and **Product, Run** in the
+menu bar is the same action.
+
+The first run on a given iPad prompts for **Developer Mode** (Settings,
+Privacy & Security, Developer Mode, then restart when asked). iOS and iPadOS
+only offer that switch after Xcode has tried to run something on the device
+at least once, which is why it will not appear in Settings beforehand no
+matter how carefully you look.
+
+Once the app runs on the device over the cable at least once, continue with
+wireless pairing below so future sessions do not need the capture card's only
+port taken by the debugging cable.
+
+### Trusting the Developer App certificate
+
+With a free Apple ID (no paid developer account), the first install on a
+given iPad shows an Xcode alert: "The application could not be launched
+because the Developer App Certificate is not trusted." The build and install
+both succeeded; the iPad just has not been told to trust that certificate
+yet.
+
+1. On the iPad, open **Settings**.
+2. Go to **General, VPN & Device Management** (some iPadOS versions show
+   **General, Device Management**, or **Profiles & Device Management**).
+3. Under **Developer App**, tap the entry for your Apple ID.
+4. Tap **Trust "[your Apple ID]"**, then confirm **Trust**.
+5. Launch **MyCapture** from the iPad's home screen directly; a re-run from
+   Xcode is not needed.
+
+Free provisioning profiles expire about every 7 days, so this same alert, and
+the same fix, can reappear periodically. That is expected, not a new fault.
+
 ## Option A: wireless debugging (recommended)
 
 Xcode can install, run, debug and stream logs from an iPad over Wi-Fi once the
@@ -23,12 +148,18 @@ afterwards unless the iPad is unpaired, erased, or has a major iPadOS update.
 4. On the iPad, turn on Developer Mode if it is not already on: Settings,
    Privacy & Security, Developer Mode, then restart the iPad when asked. iOS
    and iPadOS only offer this switch after Xcode has tried to run something on
-   the device at least once, so the first run (see "Build and run" in
-   README.md) must happen over the cable regardless.
-5. In Xcode, open **Window, Devices and Simulators** (Shift+Cmd+2) and select
-   the iPad in the left-hand list.
-6. Tick **Connect via network**. A small network icon appears next to the
-   device name once pairing has finished, which can take a minute.
+   the device at least once, so the first run (see "First time setup" above)
+   must happen over the cable regardless.
+5. Open **Device Hub**: **Xcode, Open Developer Tool, Device Hub**, or launch
+   it directly without Xcode running. Select the iPad in the sidebar.
+   (Older Xcode versions call this the **Window, Devices and Simulators**
+   panel, Shift+Cmd+2, instead; the setting below is in the same place either
+   way.)
+6. Turn on **Connect via Network** (sometimes shown as a Wi-Fi or network
+   toggle in the device's detail pane). A network icon appears next to the
+   device name once pairing has finished, which can take a minute. If the
+   control is greyed out, wait for Xcode to finish "preparing" the device
+   first.
 7. The iPad may ask to allow My Capture, or Xcode, to find devices on the
    local network: allow it. This is the iOS **Local Network** permission, and
    it is also listed under Settings, Privacy & Security, Local Network if it
@@ -51,11 +182,11 @@ afterwards unless the iPad is unpaired, erased, or has a major iPadOS update.
 
 ### Logs without a debug session
 
-Once paired, **Window, Devices and Simulators** also has a console pane for
-the device, and the Mac's own Console.app lists the iPad under Devices in its
-sidebar and can stream and filter its log, including from a build that was
-not started from Xcode (for example one left running from a previous
-session).
+Once paired, Device Hub (or **Window, Devices and Simulators** on older
+Xcode versions) also has a console pane for the device, and the Mac's own
+Console.app lists the iPad under Devices in its sidebar and can stream and
+filter its log, including from a build that was not started from Xcode (for
+example one left running from a previous session).
 
 ### Command line alternative
 

@@ -1,10 +1,12 @@
+// xcode: set sdk=iOS
+
 // HelpView.swift: the Help sheet.
 //
 // The text is adapted from internal/ui/help.md, the help built into the
 // macOS and Windows versions, leaving out the keyboard shortcuts and
 // environment variables that only exist there, and mentioning the things
 // that are specific to the iPad: the system route picker for audio output,
-// and the iPad's own volume buttons.
+// the manual Rotate control, and the iPad's own volume buttons.
 
 import SwiftUI
 
@@ -29,9 +31,10 @@ struct HelpView: View {
                     section("The controls") {
                         bullet("Video device", "the capture device to show, or (none) to stop the picture.")
                         bullet("Mode", "the resolution and frame rate. The widest mode up to 1920 pixels (normally 1920x1080 at 60 fps) is chosen first.")
-                        bullet("Audio input", "the sound source, usually named like the capture device.")
+                        bullet("Audio input", "the sound source, usually named like the capture device, or (none) to stop listening to any input.")
                         bullet("Audio output button", "opens the system's output picker, which lists the speakers, wired or Bluetooth headphones, AirPlay devices and any USB output. iPadOS only allows choosing the output this way, not from within the app.")
                         bullet("Aspect", "how the picture fills its area. Fit keeps the source shape and leaves black bars. Stretch to window fills the area and distorts the shape. Fill window keeps the shape and crops the edges. 16:9, 16:10, 4:3, 21:9 and 1:1 force that shape.")
+                        bullet("Rotate", "turns the picture in 90 degree steps. Neither a capture card's picture nor a built-in camera's has any fixed relationship to how the iPad is held, so this is a manual choice, not automatic.")
                         bullet("Audio delay", "delays the sound so it lines up with the picture. Raise it if the sound arrives before the picture, or if it crackles.")
                     }
 

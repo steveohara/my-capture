@@ -29,6 +29,11 @@ struct ContentView: View {
     /// How the picture is fitted into its area. Kept between launches.
     @AppStorage("aspectMode") private var aspectMode = AspectMode.fit
 
+    /// How the picture is rotated. Kept between launches, the same way as
+    /// aspectMode: neither the capture card nor a built-in camera has a
+    /// fixed relationship to how the iPad is held (see RotationMode).
+    @AppStorage("rotationMode") private var rotationMode = RotationMode.none
+
     /// Whether the control panel is shown. Starts shown so the controls are
     /// discoverable the first time the app runs.
     @State private var controlsVisible = true
@@ -77,42 +82,103 @@ struct ContentView: View {
         }
     }
 
-    /// The video picture, fitted or filled according to aspectMode.
-    @ViewBuilder
+    /// The video picture, fitted or filled according to aspectMode, rotated
+    /// according to rotationMode.
+    ///
+    /// WHY ONE VIEW AND NOT AN IF/ELSE BRANCH?
+    /// aspectRatio(_:contentMode:) takes an optional ratio, so the same
+    /// PreviewView value can be used for every aspectMode by passing nil for
+    /// the fixed-shape modes' absence of one. Branching between "preview with
+    /// aspectRatio applied" and "preview alone" in an if/else, as this used
+    /// to, gives the two branches different view tree identities; SwiftUI
+    /// then tears down and recreates the PreviewUIView, including its
+    /// AVCaptureVideoPreviewLayer's connection, whenever aspectMode moved
+    /// between a fixed-shape mode and Fit, Stretch or Fill, which is what
+    /// made the picture flash black and restart on those particular changes.
+    /// A single expression has one identity throughout, so only
+    /// updateUIView runs, and the existing connection's frames keep showing.
     private var picture: some View {
-        let preview = PreviewView(session: video.session, gravity: aspectMode.gravity)
-        if let ratio = aspectMode.ratio {
-            preview.aspectRatio(ratio, contentMode: .fit)
-        } else {
-            preview
-        }
+        PreviewView(session: video.session, gravity: aspectMode.gravity,
+                    rotationAngle: rotationMode.angle)
+            .aspectRatio(aspectMode.ratio(rotatedBy: rotationMode.angle), contentMode: .fit)
     }
 
     /// The top panel: device, mode, audio and aspect pickers, plus Help and
     /// About. Sits on a material background so it reads over any picture.
+    ///
+    /// WIDTH HANDLING
+    /// All five controls plus the two sheet buttons do not fit on one row at
+    /// portrait width on an iPad (around 390 pt), where SwiftUI would
+    /// otherwise squeeze each Label's text into a single narrow column one
+    /// letter per line rather than truncate it sensibly. ViewThatFits tries
+    /// the single row first, exactly as before at landscape width, and falls
+    /// back to two rows, each a plain HStack with its own Spacer, when the
+    /// single row does not fit.
     private var controlPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 16) {
-                videoMenu
-                audioInputMenu
-                outputControl
-                aspectMenu
-                Spacer()
-                Button {
-                    showHelp = true
-                } label: {
-                    Image(systemName: "questionmark.circle")
-                }
-                Button {
-                    showAbout = true
-                } label: {
-                    Image(systemName: "info.circle")
-                }
+            ViewThatFits(in: .horizontal) {
+                oneRowControls
+                twoRowControls
             }
             delayRow
         }
         .padding()
         .background(.ultraThinMaterial)
+    }
+
+    /// All controls and the two sheet buttons in a single row. Fits at
+    /// landscape width; see controlPanel for why a fallback exists.
+    private var oneRowControls: some View {
+        HStack(spacing: 16) {
+            videoMenu
+            audioInputMenu
+            outputControl
+            aspectMenu
+            rotateMenu
+            Spacer()
+            helpButton
+            aboutButton
+        }
+    }
+
+    /// The same controls split across two rows, for widths where
+    /// oneRowControls would otherwise compress its labels unreadably (see
+    /// controlPanel). The device and mode pickers stay together on the first
+    /// row since choosing a device usually means choosing its mode next.
+    private var twoRowControls: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 16) {
+                videoMenu
+                Spacer()
+                helpButton
+                aboutButton
+            }
+            HStack(spacing: 16) {
+                audioInputMenu
+                outputControl
+                aspectMenu
+                rotateMenu
+                Spacer()
+            }
+        }
+    }
+
+    /// Opens the Help sheet.
+    private var helpButton: some View {
+        Button {
+            showHelp = true
+        } label: {
+            Image(systemName: "questionmark.circle")
+        }
+    }
+
+    /// Opens the About sheet.
+    private var aboutButton: some View {
+        Button {
+            showAbout = true
+        } label: {
+            Image(systemName: "info.circle")
+        }
     }
 
     /// Chooses the video device and its mode.
@@ -140,9 +206,11 @@ struct ContentView: View {
         }
     }
 
-    /// Chooses the audio input.
+    /// Chooses the audio input. "(none)" stops listening to any input,
+    /// matching the "(none)" choice in the video device menu.
     private var audioInputMenu: some View {
         Menu {
+            Button("(none)") { audio.stopInput() }
             ForEach(audio.inputs, id: \.uid) { port in
                 Button(port.portName) { audio.selectInput(uid: port.uid) }
             }
@@ -171,6 +239,18 @@ struct ContentView: View {
             }
         } label: {
             Label(aspectMode.title, systemImage: "aspectratio")
+        }
+    }
+
+    /// Chooses how the picture is rotated. The current choice is kept
+    /// between launches (see rotationMode in ContentView).
+    private var rotateMenu: some View {
+        Menu {
+            ForEach(RotationMode.allCases) { mode in
+                Button(mode.title) { rotationMode = mode }
+            }
+        } label: {
+            Label(rotationMode.title, systemImage: "rotate.right")
         }
     }
 

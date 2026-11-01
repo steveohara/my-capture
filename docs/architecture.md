@@ -235,6 +235,14 @@ rather than the Makefile.
   a translucent control panel that can be hidden by tapping the picture, plus
   Help and About sheets (`HelpView.swift`, `AboutView.swift`) adapted from
   `internal/ui/help.md` with the keyboard shortcuts and environment variables
-  removed, since neither exists on iPadOS.
+  removed, since neither exists on iPadOS. The video device and audio input
+  pickers each offer `(none)` to stop independently. Rotation
+  (`RotationMode.swift`) is a manual four-way choice rather than automatic,
+  since neither a capture card's picture nor a built-in camera's has a fixed
+  relationship to how the iPad is held; the fixed aspect ratios
+  (`AspectMode.ratio(rotatedBy:)`) and the preview layer's own bounds
+  (`PreviewUIView.layoutSubviews`) both account for the chosen rotation
+  swapping width and height at 90 and 270 degrees, which `videoGravity` and
+  an unrotation-aware aspect ratio would otherwise get wrong.
 - There is no bundled ffmpeg, no environment variable configuration, and no
   window chrome to manage: iPadOS only ever shows the app full screen.

@@ -1,0 +1,44 @@
+.agents/skills/my-capture/SKILL.md
+  h_32373f709924d7 13-17
+README.md
+  h_32373f709924d7 3-4,301-325,326-330,331-332,333-342,343-347,348-351,352-356,357-367,368,369-375,394
+docs/architecture.md
+  h_32373f709924d7 213-237,238-246,247-248
+ios/HANDOFF.md
+  h_32373f709924d7 3-7,62-67,68,69-81,82,83-186
+ios/MyCapture/AboutView.swift
+  h_32373f709924d7 1-2,3-40,41,42-65
+ios/MyCapture/Assets.xcassets/AppIcon.appiconset/Contents.json
+  h_32373f709924d7 3
+ios/MyCapture/ContentView.swift
+  h_32373f709924d7 1-31,32-36,37-84,85-99,100,101-103,104-107,108-116,117,118-148,149-151,152-156,157-159,160,161,162,163,164-181,182-208,209-210,211-212,213,214-244,245-256,257-285
+ios/MyCapture/HelpView.swift
+  h_32373f709924d7 1-2,3-8,9,10-33,34,35-36,37,38-98
+ios/MyCapture/PreviewView.swift
+  h_32373f709924d7 17,18,19,20-44,52,53-62,63-71,72,73-81,82,83-85,86-89,90-91,92-93,94-97,98-117,128-130,134,140
+ios/DEBUGGING.md
+  h_32373f709924d7 1-10,11-135,136-150,151-162,163-184,185-189,190-253
+docs/index.md
+  h_32373f709924d7 1-13
+docs/privacy.md
+  h_32373f709924d7 1-55
+ios/MyCapture/AspectMode.swift
+  h_32373f709924d7 5-15,59-61,72-83
+ios/MyCapture/AudioController.swift
+  h_32373f709924d7 25-33,79-84,116-121,123-129,133-136,139-157,159-165,193-195,198,202-206,214,226,230-240,252
+ios/MyCapture/RotationMode.swift
+  h_32373f709924d7 1-32
+ios/project.yml
+  h_32373f709924d7 42-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4d459e3d3f04167013da84d151521ba10b7998fc",
+  "prompts": {},
+  "humans": {
+    "h_32373f709924d7": {
+      "author": "Steve O'Hara <sohara@pivotal-solutions.co.uk>"
+    }
+  }
+}

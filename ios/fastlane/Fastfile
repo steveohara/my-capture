@@ -1,0 +1,144 @@
+# Fastfile: lanes for building, archiving and uploading My Capture for iPad
+# to App Store Connect, and for pushing its App Store Connect metadata and
+# screenshots, without doing either by hand through Xcode's Organizer or the
+# App Store Connect web UI.
+#
+# WHY FASTLANE HERE?
+# App Store Connect has no file upload for metadata, but its underlying API
+# does, and fastlane's "deliver" action is a well tested wrapper around that
+# API. Driving it from a Fastfile means the screenshots and metadata below
+# are read from plain folders and text files kept in this repository (see
+# fastlane/metadata and fastlane/screenshots), not retyped by hand into web
+# forms, and the same command reproduces the upload exactly next time. The
+# "release" lane wraps "gym" (build_app) and "deliver"'s binary upload the
+# same way, so a full submission is one command instead of several manual
+# steps in Xcode.
+#
+# WHAT THIS DOES NOT DO
+# No lane here manages signing certificates or provisioning profiles (no
+# "match" or similar): project.yml's CODE_SIGN_STYLE is Automatic, and
+# build_app below is told to use automatic signing too, so Xcode resolves
+# certificates and profiles itself the same way a normal Xcode archive
+# would, using whichever account most recently signed into Xcode on this
+# Mac. See ios/DEBUGGING.md for how that signing is set up in the first
+# place.
+
+default_platform(:ios)
+
+platform :ios do
+  # Uploads only the screenshots in fastlane/screenshots, leaving every other
+  # piece of metadata (description, keywords, and so on) untouched. Use this
+  # after adding or replacing files in fastlane/screenshots/en-US.
+  desc("Upload screenshots to App Store Connect")
+  lane :screenshots do
+    deliver(
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: false,
+      app_review_information: review_information,
+      overwrite_screenshots: true,
+      force: true
+    )
+  end
+
+  # Uploads only the text metadata in fastlane/metadata, leaving screenshots
+  # untouched. Use this after editing a file in fastlane/metadata/en-US.
+  #
+  # app_review_information is passed on every lane, not only this one,
+  # because Deliver::UploadMetadata#review_attachment_file (called
+  # unconditionally whenever metadata is uploaded) fetches the App Review
+  # Information record with no rescue of its own, and raises an unhandled
+  # Spaceship "No data" error if that record has never been created. Passing
+  # app_review_information makes deliver's own review_information step
+  # create that record first (it does rescue the same fetch), so the later,
+  # unguarded fetch in review_attachment_file then succeeds. This is a real
+  # gap in fastlane 2.241.2, not a mistake in how these lanes are called.
+  desc("Upload text metadata (description, keywords, and so on) to App Store Connect")
+  lane :metadata do
+    deliver(
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: true,
+      app_review_information: review_information,
+      force: true
+    )
+  end
+
+  # Uploads both metadata and screenshots in one pass. The usual lane to run
+  # before submitting a new version for review.
+  desc("Upload both metadata and screenshots to App Store Connect")
+  lane :upload_assets do
+    deliver(
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: false,
+      app_review_information: review_information,
+      overwrite_screenshots: true,
+      force: true
+    )
+  end
+
+  # Archives the app and uploads the binary to App Store Connect, without
+  # touching metadata or screenshots (run upload_assets separately for
+  # those, before or after). This is the one lane here that needs a Mac
+  # with Xcode and the signing certificate set up as in ios/DEBUGGING.md; it
+  # cannot run on a CI machine that has never been signed into the right
+  # Apple ID.
+  desc("Build, archive and upload the app binary to App Store Connect")
+  lane :release do
+    build_app(
+      project: "MyCapture.xcodeproj",
+      scheme: "MyCapture",
+      configuration: "Release",
+      # Matches project.yml's CODE_SIGN_STYLE: Automatic; xcodebuild
+      # resolves the certificate and provisioning profile itself, the same
+      # as an ordinary Xcode archive, rather than this lane managing either.
+      export_method: "app-store",
+      export_options: {
+        signingStyle: "automatic",
+        teamID: "VGC7Z7SNU7"
+      },
+      # Raw xcodebuild (what gym calls) does not create or fetch a missing
+      # App Store distribution profile during -exportArchive on its own,
+      # unlike Xcode's own Organizer; without this flag the export step
+      # fails with "No profiles for '...' were found" even though the
+      # archive step just above it succeeded and used the right team.
+      # export_xcargs (not xcargs) because this flag is needed during
+      # -exportArchive specifically, not the earlier archive build.
+      export_xcargs: "-allowProvisioningUpdates"
+    )
+
+    # skip_metadata and skip_screenshots are true here because this lane's
+    # job is only the binary; run metadata or upload_assets separately to
+    # push text and images, same as skip_binary_upload: true does the
+    # opposite split in those lanes.
+    upload_to_app_store(
+      skip_metadata: true,
+      skip_screenshots: true,
+      skip_app_version_update: true,
+      app_review_information: review_information,
+      force: true
+    )
+  end
+end
+
+# The contact Apple's reviewers can reach with questions during review, and
+# a note telling them the app needs a USB-C video capture card plugged into
+# the iPad to show anything; without that note, a reviewer testing on their
+# own iPad with nothing plugged in would just see a black screen and could
+# easily take that for a bug. There is no login, so no demo account fields
+# are set here, which makes deliver upload demo_account_required: false.
+def review_information
+  {
+    first_name: "Steve",
+    last_name: "O'Hara",
+    phone_number: "+447802484227",
+    email_address: "ohara@pivotal-solutions.co.uk",
+    notes: "My Capture shows the live picture and sound of a USB-C video " \
+           "capture device (a USB Video Class capture card). Without one " \
+           "plugged into the iPad's USB-C port, the app opens to a black " \
+           "screen with device pickers showing \"(none)\", which is " \
+           "expected, not a bug: there is nothing else to show without " \
+           "that hardware attached."
+  }
+end

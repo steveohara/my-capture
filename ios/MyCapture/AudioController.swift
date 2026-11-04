@@ -2,11 +2,12 @@
 // that it lines up with the picture.
 //
 // THE AUDIO PATH
-// AVAudioEngine joins three nodes: the input (the capture device's audio, or a
-// microphone), an AVAudioUnitDelay, and the main mixer, which plays on whatever
-// output the iPad is currently using. The delay unit does the job of the ring
-// buffer in the Go versions: audio normally arrives sooner than the picture,
-// so it is held back by the number of milliseconds the user sets.
+// AVAudioEngine joins four nodes: the input (the capture device's audio, or a
+// microphone), an AVAudioUnitDelay, a fixed gain boost (an AVAudioMixerNode
+// used only for its outputVolume), and the main mixer, which plays on
+// whatever output the iPad is currently using. The delay unit does the job of
+// the ring buffer in the Go versions: audio normally arrives sooner than the
+// picture, so it is held back by the number of milliseconds the user sets.
 //
 // CHOOSING THE DEVICES
 // iPadOS lets an app choose its input (setPreferredInput) but not its output.
@@ -19,7 +20,13 @@
 //     noise suppression and echo cancellation that would otherwise change the
 //     sound of the capture device and add latency.
 //   - The I/O buffer is asked to be 5 ms. iPadOS may choose a larger one.
-//   - There is no volume control, because the iPad's own volume buttons do it.
+//   - There is no user-facing volume control, because the iPad's own volume
+//     buttons do it. A fixed gain boost (see boostGain) is applied in the
+//     node graph itself, because capture devices tested on iPad came through
+//     far quieter than the same hardware on macOS and Windows, even at full
+//     hardware volume; 175x (about +44.9 dB) was needed to match a normal
+//     playback volume on the device and card tested, found by live
+//     listening with a temporary debug gain slider (since removed).
 //
 // THREADING
 // Most of the controller runs on the main thread, where SwiftUI calls it and
@@ -67,6 +74,19 @@ final class AudioController: ObservableObject {
     /// The delay node. It is attached once and kept for the life of the app.
     private let delay = AVAudioUnitDelay()
 
+    /// A fixed gain stage after the delay, attached once and kept for the
+    /// life of the app. AVAudioMixerNode's outputVolume accepts values above
+    /// 1.0, so this node is used purely for its gain, not for mixing.
+    private let boost = AVAudioMixerNode()
+
+    /// The fixed gain applied by boost, as a linear multiplier (175.0 is
+    /// about +44.9 dB). Capture devices tested on iPad came through far
+    /// quieter than the same hardware on macOS and Windows at full hardware
+    /// volume, even with a large boost; 175 was found by live listening on a
+    /// real device and capture card to match a normal playback volume,
+    /// using a temporary debug gain slider that has since been removed.
+    private static let boostGain: Float = 175.0
+
     /// Notification observers, kept so they are not released.
     private var observers: [NSObjectProtocol] = []
 
@@ -92,6 +112,8 @@ final class AudioController: ObservableObject {
                              : min(max(saved, AudioController.delayRange.lowerBound),
                                    AudioController.delayRange.upperBound)
         engine.attach(delay)
+        engine.attach(boost)
+        boost.outputVolume = AudioController.boostGain
     }
 
     // -----------------------------------------------------------------------
@@ -273,12 +295,14 @@ final class AudioController: ObservableObject {
     // Engine
     // -----------------------------------------------------------------------
 
-    /// Connects input, delay and output with the hardware's current format and
-    /// starts the engine. Called at start and whenever the route changes.
+    /// Connects input, delay, the fixed gain boost and output with the
+    /// hardware's current format, and starts the engine. Called at start and
+    /// whenever the route changes.
     private func rebuildAndStart() {
         engine.stop()
         engine.disconnectNodeOutput(engine.inputNode)
         engine.disconnectNodeOutput(delay)
+        engine.disconnectNodeOutput(boost)
 
         // A route with no input reports a zero sample rate, and connecting
         // nodes with that format would crash.
@@ -289,7 +313,8 @@ final class AudioController: ObservableObject {
         }
 
         engine.connect(engine.inputNode, to: delay, format: format)
-        engine.connect(delay, to: engine.mainMixerNode, format: format)
+        engine.connect(delay, to: boost, format: format)
+        engine.connect(boost, to: engine.mainMixerNode, format: format)
 
         // Delay unit as a pure delay: all wet, no feedback echoes, and a
         // low pass filter at the Nyquist frequency so no treble is lost (its

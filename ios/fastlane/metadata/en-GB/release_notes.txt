@@ -1,0 +1,1 @@
+First release: live picture and sound from a USB-C video capture device, with aspect and rotation controls, an adjustable audio delay, and a system output picker.

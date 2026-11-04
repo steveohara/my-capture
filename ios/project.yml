@@ -14,7 +14,7 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "0.1.0"
+    MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
 
 targets:
@@ -52,6 +52,7 @@ targets:
         # and is silently lost the next time that command runs; setting it
         # here makes it part of the source of truth XcodeGen reads, so it
         # survives every regeneration. This is sohara@pivotal-solutions.co.uk's
-        # free Apple ID team; change it to build with a different Apple ID.
-        DEVELOPMENT_TEAM: DV8Q73MK77
+        # paid Apple Developer Program team, needed to archive and submit an
+        # App Store build; change it to build with a different Apple ID.
+        DEVELOPMENT_TEAM: VGC7Z7SNU7
         CODE_SIGN_STYLE: Automatic

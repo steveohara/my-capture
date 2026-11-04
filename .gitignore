@@ -6,3 +6,9 @@ build/
 
 ios/*.xcodeproj
 xcuserdata/
+
+# fastlane's own run artefacts, not the metadata or screenshots we keep.
+ios/fastlane/report.xml
+ios/fastlane/Preview.html
+ios/fastlane/screenshots/screenshots.html
+ios/fastlane/test_output

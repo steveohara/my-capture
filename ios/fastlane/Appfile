@@ -1,0 +1,23 @@
+# Appfile: the account and app identifiers fastlane uses for every lane in
+# this folder, so they are not repeated or retyped on every command.
+#
+# Values here come from ios/project.yml, the single source of truth for the
+# bundle id and signing team (see the comments there). If that file ever
+# changes app_identifier or team_id, update this file to match.
+
+# The bundle identifier of the app, matching
+# project.yml's PRODUCT_BUNDLE_IDENTIFIER.
+app_identifier("io.github.steveohara.mycapture")
+
+# The Apple ID used to sign into App Store Connect and the Developer Portal.
+apple_id("sohara@pivotal-solutions.co.uk")
+
+# The paid Apple Developer Program team, matching project.yml's
+# DEVELOPMENT_TEAM. Used for the Developer Portal (certificates,
+# provisioning profiles).
+team_id("VGC7Z7SNU7")
+
+# The same team, but as it needs to be identified for App Store Connect
+# specifically. For a single-team individual account these are normally the
+# same value as team_id above.
+itc_team_id("VGC7Z7SNU7")

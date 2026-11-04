@@ -42,11 +42,12 @@ nothing to build against and the Run button stays unusable.
 
 ### Set a signing team
 
-A free Apple ID is enough; no paid developer account is needed. The team is
-set in `ios/project.yml` (`DEVELOPMENT_TEAM`), not chosen by hand in Xcode,
-because of how the project is regenerated; see "Why the team belongs in
-project.yml" below. Signing & Capabilities should already show a team filled
-in as soon as the project is opened.
+A free Apple ID was used during development; the project now signs with a
+paid Apple Developer Program account for App Store submission. Either way
+the team is set in `ios/project.yml` (`DEVELOPMENT_TEAM`), not chosen by hand
+in Xcode, because of how the project is regenerated; see "Why the team
+belongs in project.yml" below. Signing & Capabilities should already show a
+team filled in as soon as the project is opened.
 
 1. In the left sidebar, click the blue **MyCapture** project icon at the top.
 2. Under **TARGETS**, select **MyCapture**.
@@ -63,8 +64,9 @@ rebuilds it from `ios/project.yml` alone, discarding anything set only in the
 new Swift file is added or `project.yml` changes, so a team chosen only in
 Xcode's UI is silently lost the next time that happens, which then blocks
 Run with a signing error until the team is chosen again. `project.yml`
-already sets `DEVELOPMENT_TEAM: DV8Q73MK77` (the free Apple ID
-`sohara@pivotal-solutions.co.uk`), so this should not come up normally.
+already sets `DEVELOPMENT_TEAM: VGC7Z7SNU7` (the paid Apple Developer
+Program account `sohara@pivotal-solutions.co.uk`), so this should not come
+up normally.
 
 To sign with a different Apple ID:
 
@@ -116,11 +118,11 @@ port taken by the debugging cable.
 
 ### Trusting the Developer App certificate
 
-With a free Apple ID (no paid developer account), the first install on a
-given iPad shows an Xcode alert: "The application could not be launched
-because the Developer App Certificate is not trusted." The build and install
-both succeeded; the iPad just has not been told to trust that certificate
-yet.
+The first install of a development-signed build on a given iPad shows an
+Xcode alert: "The application could not be launched because the Developer
+App Certificate is not trusted." The build and install both succeeded; the
+iPad just has not been told to trust that certificate yet. This applies to
+both a free Apple ID and a paid Apple Developer Program account.
 
 1. On the iPad, open **Settings**.
 2. Go to **General, VPN & Device Management** (some iPadOS versions show
@@ -130,8 +132,11 @@ yet.
 5. Launch **MyCapture** from the iPad's home screen directly; a re-run from
    Xcode is not needed.
 
-Free provisioning profiles expire about every 7 days, so this same alert, and
-the same fix, can reappear periodically. That is expected, not a new fault.
+With a free Apple ID, provisioning profiles expire about every 7 days, so
+this same alert, and the same fix, can reappear periodically; that is
+expected, not a new fault. A paid Apple Developer Program account's
+provisioning profiles last up to a year, so this should be rare now that
+`project.yml` signs with one.
 
 ## Option A: wireless debugging (recommended)
 
@@ -218,10 +223,12 @@ chasing a crash.
 - **Independent USB 3.x data lanes to the downstream ports**, not a cheap
   hub that multiplexes every port through one USB 2.0 controller. The capture
   card is a USB Video Class device that needs real bandwidth (1080p60 is
-  already bandwidth-sensitive; see the Windows stuttering note in
-  `HANDOFF.md`), and a hub that shares bandwidth unevenly between the card
-  and the debug cable can reintroduce that same kind of stutter on iPadOS.
-  If the hub's listing does not say how many independent USB 3.x controllers
+  already bandwidth-sensitive: the same Guermok USB3 Video card stuttered
+  over this at 1080p60 on Windows even in plain ffplay, though it has been
+  fine on macOS and the iPad), and a hub that shares bandwidth unevenly
+  between the card and the debug cable can reintroduce that same kind of
+  stutter on iPadOS. If the hub's listing does not say how many independent
+  USB 3.x controllers
   it has, assume it has one and treat the combination as a risk, not a
   certainty.
 - **USB Power Delivery passthrough**, if the plan is to debug for long

@@ -324,8 +324,8 @@ open MyCapture.xcodeproj
 ```
 
 In Xcode, select the `MyCapture` target and check Signing & Capabilities: the
-free Apple ID's team (`DV8Q73MK77` for `sohara@pivotal-solutions.co.uk`) is
-already set from `project.yml`'s `DEVELOPMENT_TEAM`, so nothing needs
+Apple Developer Program team (`VGC7Z7SNU7` for `sohara@pivotal-solutions.co.uk`)
+is already set from `project.yml`'s `DEVELOPMENT_TEAM`, so nothing needs
 choosing there normally. Plug in the iPad and run. The first run on the
 device needs Developer Mode turned on (Settings, Privacy & Security,
 Developer Mode), which iPadOS prompts for.
@@ -368,6 +368,26 @@ MyCapture/AspectMode.swift      the aspect modes, shared in spirit with internal
 MyCapture/RotationMode.swift    the four manual picture rotations
 MyCapture/HelpView.swift        the Help sheet
 MyCapture/AboutView.swift       the About sheet
+DEBUGGING.md                    building and debugging on a real iPad
+RELEASING.md                    building and submitting a new App Store version
+fastlane/Appfile                the app identifier, Apple ID and team fastlane uses
+fastlane/Fastfile                lanes that build, archive, and upload metadata and screenshots
+fastlane/metadata/               App Store Connect text fields, one file each
+fastlane/screenshots/            the PNGs deliver uploads; see its README.md
+```
+
+### Releasing a new version
+
+See [ios/RELEASING.md](ios/RELEASING.md) for what is needed to build,
+archive and submit a new version to the App Store, including the
+`fastlane metadata` / `fastlane screenshots` / `fastlane upload_assets` /
+`fastlane release` lanes in `ios/fastlane`.
+
+```sh
+cd ios
+fastlane metadata          # upload only the text fields
+fastlane screenshots       # upload only the screenshots
+fastlane upload_assets     # upload both together
 ```
 
 See [docs/architecture.md](docs/architecture.md) for how the iPad version

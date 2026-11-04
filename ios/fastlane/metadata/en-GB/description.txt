@@ -1,0 +1,21 @@
+My Capture turns your iPad into a live monitor for a USB-C video capture card: the kind used with retro game consoles, camcorders, mixing desks, HDMI switches and other capture-card sources. Plug the card into your iPad's USB-C port and the picture and sound appear straight away, full screen, with no recording and no account.
+
+FEATURES
+
+- Picks up the capture card automatically as soon as it is plugged in, alongside the iPad's own built-in cameras.
+- Choose the exact mode (resolution and frame rate) the card offers; the highest one up to 1920 pixels wide is chosen first.
+- Fit, Stretch, Fill, or force the picture to 16:9, 16:10, 4:3, 21:9 or 1:1.
+- A manual Rotate control turns the picture in 90 degree steps, because a capture card's picture has no fixed relationship to how the iPad is held.
+- Hear the card's own audio, brought up to a normal listening level, through the speaker, headphones, a Bluetooth device, or AirPlay, chosen with the system's own output picker.
+- An adjustable audio delay lines the sound back up with the picture if the two drift apart.
+- A Help screen and an About screen with version details, right in the app.
+
+WHAT IT DOES NOT DO
+
+Nothing is recorded. My Capture has no account, no analytics, no advertising, and makes no network connections of its own. See the in-app Help and the privacy policy for details.
+
+REQUIREMENTS
+
+An iPad running iPadOS 17 or later, with a USB-C port, and a USB Video Class capture device. Most capture cards from a few different brands work this way; My Capture can not guarantee every model, since iPadOS itself decides which USB video and audio devices it recognises.
+
+My Capture is also available for macOS and Windows; see the project's GitHub page from the About screen for those versions.

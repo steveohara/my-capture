@@ -224,13 +224,17 @@ rather than the Makefile.
   `internal/video`, no frame is ever copied into the program's own memory.
   Since iPadOS 17, AVFoundation lists USB video class devices plugged into the
   USB-C port as "external" cameras (`VideoController.swift`).
-- **Audio** runs an `AVAudioEngine` graph: input node, `AVAudioUnitDelay`, main
-  mixer (`AudioController.swift`). The delay node plays the part the ring
-  buffer plays in `internal/audio`, holding audio back by the chosen number of
-  milliseconds so it lines up with the picture. iPadOS lets an app choose its
-  audio input but not its output; the output is chosen with the system's own
-  route picker (`AVRoutePickerView`, wrapped as `RoutePicker` in
-  `PreviewView.swift`).
+- **Audio** runs an `AVAudioEngine` graph: input node, `AVAudioUnitDelay`, a
+  fixed gain boost (`AVAudioMixerNode`), main mixer (`AudioController.swift`).
+  The delay node plays the part the ring buffer plays in `internal/audio`,
+  holding audio back by the chosen number of milliseconds so it lines up with
+  the picture. The boost node applies a fixed gain (`boostGain`, 175x, about
+  +44.9 dB) because capture devices tested on iPad came through far quieter
+  than the same hardware on macOS and Windows, even at full hardware volume;
+  there is still no user-facing volume control, the iPad's own volume buttons
+  do that. iPadOS lets an app choose its audio input but not its output; the
+  output is chosen with the system's own route picker (`AVRoutePickerView`,
+  wrapped as `RoutePicker` in `PreviewView.swift`).
 - **The window** (`ContentView.swift`) is one SwiftUI view: the picture behind
   a translucent control panel that can be hidden by tapping the picture, plus
   Help and About sheets (`HelpView.swift`, `AboutView.swift`) adapted from

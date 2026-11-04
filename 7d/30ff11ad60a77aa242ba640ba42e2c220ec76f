@@ -1,0 +1,57 @@
+ios/project.yml
+  h_32373f709924d7 56
+  h_32373f709924d7 17,55,57
+.gitignore
+  h_32373f709924d7 9-14
+README.md
+  h_32373f709924d7 327-328,371-390
+docs/architecture.md
+  h_32373f709924d7 227-237
+ios/DEBUGGING.md
+  h_32373f709924d7 45-50,67-69,121-125,135-139,226-231
+ios/MyCapture/AudioController.swift
+  h_32373f709924d7 5-10,23-29,77-89,115-116,298-300,305,316-317
+ios/RELEASING.md
+  h_32373f709924d7 1-149
+ios/fastlane/Appfile
+  h_32373f709924d7 1-23
+ios/fastlane/Fastfile
+  h_32373f709924d7 1-144
+ios/fastlane/README.md
+  h_32373f709924d7 1-56
+ios/fastlane/metadata/copyright.txt
+  h_32373f709924d7 1
+ios/fastlane/metadata/en-GB/description.txt
+  h_32373f709924d7 1-21
+ios/fastlane/metadata/en-GB/keywords.txt
+  h_32373f709924d7 1
+ios/fastlane/metadata/en-GB/marketing_url.txt
+  h_32373f709924d7 1
+ios/fastlane/metadata/en-GB/name.txt
+  h_32373f709924d7 1
+ios/fastlane/metadata/en-GB/privacy_url.txt
+  h_32373f709924d7 1
+ios/fastlane/metadata/en-GB/promotional_text.txt
+  h_32373f709924d7 1
+ios/fastlane/metadata/en-GB/release_notes.txt
+  h_32373f709924d7 1
+ios/fastlane/metadata/en-GB/subtitle.txt
+  h_32373f709924d7 1
+ios/fastlane/metadata/en-GB/support_url.txt
+  h_32373f709924d7 1
+ios/fastlane/metadata/primary_category.txt
+  h_32373f709924d7 1
+ios/fastlane/screenshots/README.md
+  h_32373f709924d7 1-75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7d30ff11ad60a77aa242ba640ba42e2c220ec76f",
+  "prompts": {},
+  "humans": {
+    "h_32373f709924d7": {
+      "author": "Steve O'Hara <sohara@pivotal-solutions.co.uk>"
+    }
+  }
+}

@@ -13,6 +13,13 @@ capture device. It targets macOS, Windows and iPadOS.
 
 ![My Capture showing a test card, with the device pickers and controls above the picture](docs/images/screenshot.png)
 
+![My Capture showing a Fire TV connected through a USB3 capture device at 2560x1600, 50 fps](docs/images/screenshot-firetv.png)
+
+A short screen recording of the window in use, picking devices and changing
+settings:
+
+<video src="docs/videos/demo.mp4" controls width="688"></video>
+
 ## Requirements
 
 | What | Why |

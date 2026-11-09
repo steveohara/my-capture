@@ -1,0 +1,16 @@
+README.md
+  h_32373f709924d7 16-22
+docs/index.md
+  h_32373f709924d7 10-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ce6720987af68c961488011490fee98c05efb607",
+  "prompts": {},
+  "humans": {
+    "h_32373f709924d7": {
+      "author": "Steve O'Hara <sohara@pivotal-solutions.co.uk>"
+    }
+  }
+}

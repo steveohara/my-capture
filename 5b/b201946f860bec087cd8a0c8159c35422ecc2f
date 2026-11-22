@@ -1,0 +1,14 @@
+ios/project.yml
+  h_32373f709924d7 18,40-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5bb201946f860bec087cd8a0c8159c35422ecc2f",
+  "prompts": {},
+  "humans": {
+    "h_32373f709924d7": {
+      "author": "Steve O'Hara <sohara@pivotal-solutions.co.uk>"
+    }
+  }
+}
